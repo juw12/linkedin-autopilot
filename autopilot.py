@@ -517,6 +517,7 @@ def tick(config, db) -> None:
         log.info("PAUSE file present; doing nothing")
         return
     now = local_now(config)
+    kv_set(db, "last_tick", now.strftime("%Y-%m-%d %H:%M"))
 
     repos: dict = {}
     last_sync = kv_get(db, "last_github_sync_local", "")
@@ -734,7 +735,7 @@ def cmd_uninstall() -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", choices=["init", "auth", "goatcounter", "tick", "preview", "status", "approve", "install", "uninstall"])
+    parser.add_argument("command", choices=["init", "auth", "goatcounter", "tick", "preview", "status", "approve", "install", "uninstall", "dashboard"])
     parser.add_argument("count", nargs="?", type=int, default=3)
     args = parser.parse_args()
     setup_logging()
@@ -751,6 +752,11 @@ def main() -> None:
         return
     if args.command == "uninstall":
         cmd_uninstall()
+        return
+    if args.command == "dashboard":
+        import dashboard
+
+        dashboard.run()
         return
 
     if args.command == "tick":

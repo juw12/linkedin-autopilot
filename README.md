@@ -67,6 +67,7 @@ Edit `config.json` for your GitHub user, time zone, slots, caps and excluded rep
 | Command | |
 |---|---|
 | `status` | token expiry, queue, recent posts, best performers, click counts |
+| `dashboard` | local app: upcoming schedule with post previews, every post's reach, GitHub visitors, stars and "Try it" clicks, what the bot has learned, and the log |
 | `preview 5` | write the next 5 posts to `drafts/` without posting |
 | `approve` | in `"mode": "review"`, approve the waiting draft |
 | `PAUSE` file | kill switch |
@@ -77,7 +78,7 @@ LinkedIn tokens for self-serve apps last 60 days with no refresh token; you get 
 
 `autopilot.py` scheduler and commands · `composer.py` post writing and guards · `github_source.py` README/commit facts ·
 `visuals.py` screenshots · `linkedin_api.py` OAuth, images, posts, comments · `analytics.py` scoring ·
-`trylinks.py` tracked go-links · `selftest.py` tests (run in CI)
+`trylinks.py` tracked go-links · `selftest.py` tests (run in CI) · `dashboard.py` + `dashboard.html` local dashboard
 
 ## License
 

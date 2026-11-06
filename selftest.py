@@ -134,5 +134,42 @@ same_thursday = datetime(2026, 11, 12, 9, 0)
 check(autopilot.posts_this_week(cap_db, next_tuesday) == 0, "weekly cap resets on Monday (next Tuesday's slot still posts)")
 check(autopilot.posts_this_week(cap_db, same_thursday) == 3, "weekly cap counts this week's posts")
 
+# Dashboard data: posted history with reach/clicks, and the upcoming schedule from the prepared queue
+import dashboard  # noqa: E402
+
+with tempfile.TemporaryDirectory() as temp_dir:
+    real_paths = (autopilot.DB_PATH, autopilot.SECRETS_PATH, autopilot.TOKEN_PATH)
+    autopilot.DB_PATH = Path(temp_dir) / "state.db"
+    autopilot.SECRETS_PATH = Path(temp_dir) / "secrets.json"
+    autopilot.TOKEN_PATH = Path(temp_dir) / "token.json"
+    try:
+        dash_db = autopilot.connect_db()
+        posted_day = (datetime.now() - timedelta(days=5)).strftime("%Y-%m-%d")
+        dash_db.execute(
+            "INSERT INTO posts(slot, source, repo, angle, body, status, posted_at, url) VALUES(?,?,?,?,?,?,?,?)",
+            (posted_day + " 08:00", "queue:x", "buddy", "launch", "Hook line\nmore", "posted", posted_day + " 08:01",
+             "https://www.linkedin.com/feed/update/urn:li:share:1"),
+        )
+        dash_db.execute("INSERT INTO metrics VALUES(?,?,?,?,datetime('now'))", ("u", posted_day, 1200, 48))
+        dash_db.execute("INSERT INTO try_clicks VALUES(?,?,?)", (posted_day, "buddy", 4))
+        dash_db.execute("INSERT INTO github_signals VALUES(?,?,?,?,?)", (posted_day, "buddy", 9, 5, 2))
+        dash_db.execute(
+            "INSERT INTO queue(id, slot_date, repo, angle, body, comment, images) VALUES(?,?,?,?,?,?,?)",
+            ("seed-x", "2000-01-01", "cairn", "launch", "Cairn hook", "Try it: x", "[]"),
+        )
+        dash_db.commit()
+        dash_db.close()
+        data = dashboard.build_data()
+        history_row = data["history"][0]
+        check(history_row["impressions"] == 1200 and history_row["hook"] == "Hook line",
+              "dashboard: posted history carries LinkedIn reach")
+        check(data["schedule"][0]["title"] == "cairn" and data["schedule"][0]["kind"] == "prepared",
+              "dashboard: next slot shows the due prepared post")
+        check(data["github"]["clicks_30d_total"] == 4 and data["overview"]["posted_total"] == 1,
+              "dashboard: clicks and totals add up")
+        json.dumps(data)
+    finally:
+        autopilot.DB_PATH, autopilot.SECRETS_PATH, autopilot.TOKEN_PATH = real_paths
+
 print("\nALL PASSED" if not failures else f"\n{len(failures)} FAILED")
 sys.exit(1 if failures else 0)
