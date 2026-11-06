@@ -275,7 +275,7 @@ class Picker:
     # -- candidates, in priority order --------------------------------------
     def from_seed_queue(self, slot_date: str):
         row = self.db.execute(
-            "SELECT id, repo, angle, body, comment, images FROM queue WHERE used=0 AND slot_date<=? ORDER BY slot_date LIMIT 1",
+            "SELECT id, repo, angle, body, comment, images FROM queue WHERE used=0 AND slot_date<=? ORDER BY slot_date, id LIMIT 1",
             (slot_date,),
         ).fetchone()
         if not row:
