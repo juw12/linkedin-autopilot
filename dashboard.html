@@ -4,7 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>LinkedIn Autopilot</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230a66c2'/%3E%3Ctext x='16' y='22' font-family='Segoe UI,Arial' font-weight='700' font-size='16' fill='white' text-anchor='middle'%3Ein%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#0a66c2">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="manifest" href="/manifest.webmanifest">
 <style>
   :root {
     --bg: #f3f2ef; --card: #fff; --ink: #1d2226; --muted: #5e6b75; --line: #e3e6e8;
@@ -15,13 +19,22 @@
   body { margin: 0; font: 14px/1.5 "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--ink); }
   header.top { position: sticky; top: 0; z-index: 2; background: var(--card); border-bottom: 1px solid var(--line); }
   .bar { max-width: 1180px; margin: 0 auto; padding: 10px 20px; display: flex; align-items: center; gap: 18px; }
-  .brand { font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
-  .logo { width: 26px; height: 26px; border-radius: 6px; background: var(--blue); color: #fff; display: grid; place-items: center; font-size: 13px; }
-  nav { display: flex; gap: 2px; flex-wrap: wrap; }
-  nav button { border: 0; background: none; padding: 8px 12px; border-radius: 6px; font: inherit; color: var(--muted); cursor: pointer; }
+  .brand { margin: 0; font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .logo { width: 28px; height: 28px; display: block; }
+  nav { display: flex; gap: 2px; min-width: 0; }
+  nav button { border: 0; background: none; padding: 8px 12px; border-radius: 6px; font: inherit; color: var(--muted); cursor: pointer; white-space: nowrap; }
   nav button:hover { background: #f1f3f4; color: var(--ink); }
+  nav button:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
   nav button[aria-selected="true"] { color: var(--blue); background: var(--blue-soft); font-weight: 600; }
   .updated { margin-left: auto; color: var(--muted); font-size: 12px; white-space: nowrap; }
+  @media (max-width: 760px) {
+    .bar { flex-wrap: wrap; gap: 4px 12px; padding: 8px 14px 0; }
+    .brand { font-size: 15px; }
+    nav { order: 3; flex: 1 0 100%; overflow-x: auto; scrollbar-width: none; margin: 0 -14px; padding: 0 14px 6px; }
+    nav::-webkit-scrollbar { display: none; }
+    nav button { min-height: 40px; padding: 8px 11px; }
+    main { padding: 14px; }
+  }
   main { max-width: 1180px; margin: 0 auto; padding: 20px; }
   section[hidden] { display: none; }
   h2 { font-size: 18px; margin: 0 0 12px; }
@@ -50,13 +63,18 @@
   .post h4 { margin: 6px 0 0; font-size: 16px; }
   .post .hook { color: #38434f; margin: 2px 0 8px; }
   .thumbs { display: flex; gap: 8px; overflow-x: auto; }
-  .thumbs img { height: 96px; border-radius: 6px; border: 1px solid var(--line); background: #fff; }
+  .thumbs img { flex: none; width: 170px; height: 96px; object-fit: cover; border-radius: 6px; border: 1px solid var(--line); background: #eef0f2; }
   details summary { cursor: pointer; color: var(--blue); font-weight: 600; margin-top: 8px; }
   pre.text { white-space: pre-wrap; font: inherit; background: #f8f9fa; padding: 12px; border-radius: 6px; margin: 8px 0 0; }
   table { width: 100%; border-collapse: collapse; }
+  .scroll { overflow-x: auto; }
+  .scroll table { min-width: 720px; }
+  .scroll td:first-child { white-space: nowrap; }
   th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
   th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; }
   td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.quiet td { color: var(--muted); }
+  tr.quiet td a { color: var(--muted); }
   .empty { color: var(--muted); padding: 18px; text-align: center; background: #fafafa; border-radius: 8px; }
   .hint { color: var(--muted); font-size: 13px; }
   .hint code { background: #eef0f2; padding: 1px 5px; border-radius: 4px; }
@@ -69,6 +87,7 @@
   .rank .track { background: #eef0f2; border-radius: 4px; height: 12px; overflow: hidden; }
   .rank .fill { background: var(--blue); height: 100%; }
   .log { font: 12px/1.6 Consolas, monospace; white-space: pre-wrap; margin: 0; max-height: 70vh; overflow: auto; }
+  .log .t { color: var(--muted); }
   .log .w { color: var(--amber); }
   .log .e { color: var(--red); }
   a { color: var(--blue); }
@@ -77,7 +96,7 @@
 <body>
 <header class="top">
   <div class="bar">
-    <div class="brand"><span class="logo">in</span>LinkedIn Autopilot</div>
+    <h1 class="brand"><img class="logo" src="/icon.svg" alt="" width="28" height="28">LinkedIn Autopilot</h1>
     <nav role="tablist">
       <button role="tab" data-tab="overview" aria-selected="true">Overview</button>
       <button role="tab" data-tab="schedule">Schedule</button>
@@ -225,7 +244,7 @@ function renderReach(d) {
     </div>
     <div class="card" style="margin-bottom:18px">
       <h3>Every post</h3>
-      ${d.history.length ? `<div style="overflow-x:auto"><table>
+      ${d.history.length ? `<div class="scroll"><table>
         <thead><tr><th>Slot</th><th>Post</th><th>Status</th><th class="num">Impressions</th><th class="num">Engagements</th><th class="num">GitHub visitors</th><th class="num">Stars</th><th class="num">Try-it clicks</th><th></th></tr></thead>
         <tbody>${rows}</tbody></table></div>` : `<div class="empty">Nothing posted yet. The first post goes out ${esc(o.next_post ? niceDate(o.next_post.slot) : "soon")} WIB.</div>`}
     </div>
@@ -239,7 +258,9 @@ function renderReach(d) {
 
 function renderGithub(d) {
   const g = d.github;
-  const rows = g.repos.map((r) => `<tr>
+  const activity = (r) => (r.stars || 0) + (r.li_uniques || 0) + (r.li_views || 0) + (r.clicks_30d || 0) + (r.posts || 0);
+  const repos = [...g.repos].sort((a, b) => (activity(b) > 0) - (activity(a) > 0));
+  const rows = repos.map((r) => `<tr class="${activity(r) ? "" : "quiet"}">
       <td><a href="https://github.com/juw12/${esc(r.repo)}" target="_blank" rel="noopener">${esc(r.repo)}</a></td>
       <td class="num">${num(r.stars)}</td>
       <td class="num">${num(r.li_uniques)}</td>
@@ -255,7 +276,7 @@ function renderGithub(d) {
     </div>
     <div class="card">
       <h3>Projects ${g.latest_day ? `<span class="hint">· snapshot ${esc(niceDate(g.latest_day))}</span>` : ""}</h3>
-      ${g.repos.length ? `<div style="overflow-x:auto"><table>
+      ${g.repos.length ? `<div class="scroll"><table>
         <thead><tr><th>Project</th><th class="num">Stars</th><th class="num">LinkedIn visitors</th><th class="num">LinkedIn views</th><th class="num">Try-it clicks (30d)</th><th class="num">Posts</th><th>Last posted</th></tr></thead>
         <tbody>${rows}</tbody></table></div>` : `<div class="empty">No GitHub data yet.</div>`}
       <p class="hint">LinkedIn visitors and views are GitHub's referrer counts over the last 14 days. Clicks come from the tracked “Try it” links.</p>
@@ -288,7 +309,9 @@ function renderLearning(d) {
 function renderLog(d) {
   const lines = d.log.map((line) => {
     const cls = / (ERROR|CRITICAL) /.test(line) ? "e" : / WARNING /.test(line) ? "w" : "";
-    return `<span class="${cls}">${esc(line)}</span>`;
+    const stamp = line.match(/^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d(,\d+)?/);
+    const rest = stamp ? line.slice(stamp[0].length) : line;
+    return `<span class="${cls}">${stamp ? `<span class="t">${esc(stamp[0].slice(5, 16))}</span>` : ""}${esc(rest)}</span>`;
   }).join("\n");
   document.getElementById("log").innerHTML = `<div class="card"><h3>Recent activity <span class="hint">(newest first)</span></h3><pre class="log">${lines || "No log yet."}</pre></div>`;
 }
