@@ -1,0 +1,21 @@
+# Secrets and personal state: never commit
+token.json
+secrets.json
+state.db
+state.db-*
+*.log
+*.log.*
+.tick.lock
+PAUSE
+
+# Personal content and generated output
+seed_queue.json
+assets/
+generated/
+drafts/
+analytics_inbox/
+app_logo.png
+.pages/
+
+__pycache__/
+*.pyc

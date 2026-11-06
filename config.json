@@ -1,0 +1,46 @@
+{
+  "github_user": "juw12",
+  "timezone_offset_hours": 7,
+  "slots": [
+    {
+      "weekday": "Tue",
+      "time": "08:00"
+    },
+    {
+      "weekday": "Wed",
+      "time": "08:00"
+    },
+    {
+      "weekday": "Thu",
+      "time": "08:00"
+    }
+  ],
+  "catch_up_hours": 10,
+  "max_posts_per_week": 3,
+  "project_cooldown_days": 21,
+  "min_days_between_posts_same_repo": 3,
+  "max_similarity": 0.35,
+  "update_min_commits": 6,
+  "roundup_every_n_posts": 6,
+  "mode": "auto",
+  "links_in_first_comment": true,
+  "linkedin_api_version": "202609",
+  "ollama_model": "",
+  "exclude_repos": [
+    "signals",
+    "loop-zero",
+    "cadquery",
+    ".github",
+    "juw12",
+    "juw12.github.io",
+    "portfolio",
+    "projects",
+    "game",
+    "achievements-playground"
+  ],
+  "default_hashtags": [
+    "#OpenSource",
+    "#BuildInPublic"
+  ],
+  "goatcounter_code": ""
+}
