@@ -148,9 +148,14 @@ def due_slot(config: dict, db, now: datetime) -> str | None:
     return None
 
 
-def posts_in_last_week(db, now: datetime) -> int:
-    since = (now - timedelta(days=7)).strftime("%Y-%m-%d %H:%M")
-    return db.execute("SELECT COUNT(*) FROM posts WHERE status='posted' AND posted_at>=?", (since,)).fetchone()[0]
+def posts_this_week(db, now: datetime) -> int:
+    """Posts since Monday 00:00 of the current week.
+
+    A rolling 7-day window would count last Tuesday's 08:0x post at this Tuesday's 08:00 slot
+    and skip it, so the cap is applied per calendar week instead.
+    """
+    week_start = (now - timedelta(days=now.weekday())).strftime("%Y-%m-%d 00:00")
+    return db.execute("SELECT COUNT(*) FROM posts WHERE status='posted' AND posted_at>=?", (week_start,)).fetchone()[0]
 
 
 # ------------------------------------------------------------------ GitHub sync
@@ -532,7 +537,7 @@ def tick(config, db) -> None:
 
     if not slot:
         return
-    if posts_in_last_week(db, now) >= config["max_posts_per_week"]:
+    if posts_this_week(db, now) >= config["max_posts_per_week"]:
         log.info("Weekly cap reached; skipping slot %s", slot)
         db.execute("INSERT OR REPLACE INTO posts(slot, status, source) VALUES(?, 'skipped', 'cap')", (slot,))
         db.commit()

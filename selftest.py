@@ -121,5 +121,18 @@ scored = analytics.github_performance(memory_db)
 check(scored[0]["try_clicks"] == 7 and scored[0]["engagements"] == 18 + 7 + 3 * 2,
       f"'Try it' clicks are added to the score ({scored[0]['engagements']})")
 
+# Weekly cap: last week's Tue/Wed/Thu posts must not block this Tuesday's 08:00 slot
+import autopilot  # noqa: E402
+from datetime import datetime  # noqa: E402
+
+cap_db = sqlite3.connect(":memory:")
+cap_db.execute("CREATE TABLE posts(slot TEXT, status TEXT, posted_at TEXT)")
+for posted_at in ("2026-11-10 08:02", "2026-11-11 08:01", "2026-11-12 08:03"):
+    cap_db.execute("INSERT INTO posts VALUES(?, 'posted', ?)", (posted_at[:16], posted_at))
+next_tuesday = datetime(2026, 11, 17, 8, 0)
+same_thursday = datetime(2026, 11, 12, 9, 0)
+check(autopilot.posts_this_week(cap_db, next_tuesday) == 0, "weekly cap resets on Monday (next Tuesday's slot still posts)")
+check(autopilot.posts_this_week(cap_db, same_thursday) == 3, "weekly cap counts this week's posts")
+
 print("\nALL PASSED" if not failures else f"\n{len(failures)} FAILED")
 sys.exit(1 if failures else 0)

@@ -36,11 +36,12 @@
     "portfolio",
     "projects",
     "game",
-    "achievements-playground"
+    "achievements-playground",
+    "linkedin-autopilot"
   ],
   "default_hashtags": [
     "#OpenSource",
     "#BuildInPublic"
   ],
-  "goatcounter_code": ""
+  "goatcounter_code": "juw12"
 }
