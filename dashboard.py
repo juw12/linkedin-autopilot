@@ -1,7 +1,7 @@
 """Local dashboard: upcoming schedule, post history, reach and the signals the bot learns from.
 
 Run:  python autopilot.py dashboard
-Opens http://127.0.0.1:8766 in an app window. Read-only: it never posts or changes the schedule.
+Opens http://127.0.0.1:8770 (or the next free port) in an app window. Read-only: it never posts or changes the schedule.
 The server stops by itself 15 minutes after the window is closed.
 """
 from __future__ import annotations
@@ -9,10 +9,10 @@ from __future__ import annotations
 import json
 import mimetypes
 import shutil
-import socket
 import subprocess
 import threading
 import time
+import urllib.request
 import webbrowser
 from datetime import datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -23,7 +23,8 @@ import analytics
 import autopilot as ap
 import trylinks
 
-PORT = 8766
+PORTS = range(8770, 8790)
+PING_REPLY = b"linkedin-autopilot-dashboard"
 IDLE_SHUTDOWN_SECONDS = 15 * 60
 PAGE = Path(__file__).with_name("dashboard.html")
 IMAGE_ROOTS = (ap.ASSETS.resolve(), ap.GENERATED.resolve())
@@ -260,6 +261,8 @@ class Handler(BaseHTTPRequestHandler):
         url = urlparse(self.path)
         if url.path == "/":
             self.send(200, PAGE.read_bytes(), "text/html; charset=utf-8")
+        elif url.path == "/ping":
+            self.send(200, PING_REPLY, "text/plain")
         elif url.path == "/api/data":
             try:
                 self.send(200, json.dumps(build_data()).encode("utf-8"), "application/json")
@@ -303,17 +306,25 @@ def open_window(url: str) -> None:
         webbrowser.open(url)
 
 
-def already_running() -> bool:
-    with socket.socket() as probe:
-        return probe.connect_ex(("127.0.0.1", PORT)) == 0
-
-
 def run() -> None:
-    url = f"http://127.0.0.1:{PORT}/"
-    if already_running():
-        open_window(url)
-        return
-    server = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
+    """Reuse a dashboard that is already running, otherwise start one on the first free port."""
+    server = None
+    for port in PORTS:
+        url = f"http://127.0.0.1:{port}/"
+        try:
+            with urllib.request.urlopen(url + "ping", timeout=2) as reply:
+                if reply.read() == PING_REPLY:
+                    open_window(url)
+                    return
+        except Exception:
+            pass  # nothing of ours here
+        try:
+            server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+            break
+        except OSError:
+            continue  # port taken by another program
+    if server is None:
+        raise SystemExit("No free port for the dashboard (8770-8789).")
     server.last_request = time.time()
 
     def stop_when_idle() -> None:
