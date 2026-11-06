@@ -10,6 +10,7 @@ import json
 import mimetypes
 import shutil
 import subprocess
+import sys
 import threading
 import time
 import urllib.request
@@ -27,6 +28,28 @@ PORTS = range(8770, 8790)
 PING_REPLY = b"linkedin-autopilot-dashboard"
 IDLE_SHUTDOWN_SECONDS = 15 * 60
 PAGE = Path(__file__).with_name("dashboard.html")
+ICONS = Path(__file__).with_name("icons")
+WINDOW_TITLE = "LinkedIn Autopilot"  # must match <title> in dashboard.html
+APP_USER_MODEL_ID = "juw12.LinkedInAutopilot.Dashboard"
+ICON_FILES = {  # url path -> (file in icons/, content type); one mark for favicon, app window and taskbar
+    "/icon.svg": ("icon.svg", "image/svg+xml"),
+    "/icon-192.png": ("icon-192.png", "image/png"),
+    "/icon-512.png": ("icon-512.png", "image/png"),
+    "/favicon.ico": ("app.ico", "image/x-icon"),
+}
+MANIFEST = json.dumps({
+    "name": "LinkedIn Autopilot",
+    "short_name": "Autopilot",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#f3f2ef",
+    "theme_color": "#0a66c2",
+    "icons": [
+        {"src": "/icon.svg", "sizes": "any", "type": "image/svg+xml"},
+        {"src": "/icon-192.png", "sizes": "192x192", "type": "image/png"},
+        {"src": "/icon-512.png", "sizes": "512x512", "type": "image/png"},
+    ],
+}).encode("utf-8")
 IMAGE_ROOTS = (ap.ASSETS.resolve(), ap.GENERATED.resolve())
 AUTO_SLOTS_SHOWN = 3
 
@@ -270,6 +293,11 @@ class Handler(BaseHTTPRequestHandler):
                 self.send(500, json.dumps({"error": str(error)}).encode("utf-8"), "application/json")
         elif url.path == "/img":
             self.send_image(parse_qs(url.query).get("p", [""])[0])
+        elif url.path in ICON_FILES:
+            name, content_type = ICON_FILES[url.path]
+            self.send(200, (ICONS / name).read_bytes(), content_type)
+        elif url.path == "/manifest.webmanifest":
+            self.send(200, MANIFEST, "application/manifest+json")
         else:
             self.send(404, b"Not found", "text/plain")
 
@@ -292,8 +320,80 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
 
-def open_window(url: str) -> None:
-    """Open as a standalone app window (Edge --app), falling back to the default browser."""
+def give_window_own_taskbar_button(timeout: float = 20.0) -> bool:
+    """Edge groups --app windows under its own taskbar icon. Giving the window its own AppUserModelID splits it
+    into a separate taskbar button that shows the page icon; the relaunch properties make "Pin to taskbar"
+    start the dashboard (with icons/app.ico) instead of plain Edge. Windows only; does nothing elsewhere."""
+    if sys.platform != "win32":
+        return False
+    import ctypes
+    from ctypes import wintypes
+
+    class GUID(ctypes.Structure):
+        _fields_ = [("data1", wintypes.DWORD), ("data2", wintypes.WORD), ("data3", wintypes.WORD), ("data4", ctypes.c_ubyte * 8)]
+
+    class PROPERTYKEY(ctypes.Structure):
+        _fields_ = [("fmtid", GUID), ("pid", wintypes.DWORD)]
+
+    class PROPVARIANT(ctypes.Structure):  # only the VT_LPWSTR case is needed
+        _fields_ = [("vt", ctypes.c_ushort), ("reserved", ctypes.c_ushort * 3), ("value", ctypes.c_wchar_p), ("pad", ctypes.c_void_p)]
+
+    def guid(text: str) -> GUID:
+        value = GUID()
+        ctypes.oledll.ole32.CLSIDFromString(ctypes.c_wchar_p("{" + text + "}"), ctypes.byref(value))
+        return value
+
+    user32 = ctypes.windll.user32
+    found = []
+
+    @ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+    def check_window(hwnd, _):
+        title = ctypes.create_unicode_buffer(256)
+        class_name = ctypes.create_unicode_buffer(64)
+        user32.GetWindowTextW(hwnd, title, 256)
+        user32.GetClassNameW(hwnd, class_name, 64)
+        if title.value == WINDOW_TITLE and class_name.value.startswith("Chrome_WidgetWin") and user32.IsWindowVisible(hwnd):
+            found.append(hwnd)
+        return True
+
+    deadline = time.time() + timeout
+    while not found and time.time() < deadline:
+        user32.EnumWindows(check_window, 0)
+        if not found:
+            time.sleep(0.25)
+    if not found:
+        return False
+
+    app_model = "9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3"
+    pythonw = Path(sys.executable).with_name("pythonw.exe")
+    properties = [
+        (5, APP_USER_MODEL_ID),  # System.AppUserModel.ID
+        (2, f'"{pythonw if pythonw.exists() else sys.executable}" "{Path(__file__).with_name("autopilot.py")}" dashboard'),
+        (3, f"{ICONS / 'app.ico'},0"),  # RelaunchIconResource
+        (4, WINDOW_TITLE),  # RelaunchDisplayNameResource
+    ]
+    store = ctypes.c_void_p()
+    shell32 = ctypes.windll.shell32
+    if shell32.SHGetPropertyStoreForWindow(found[0], ctypes.byref(guid("886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99")), ctypes.byref(store)) != 0:
+        return False
+    vtable = ctypes.cast(ctypes.cast(store, ctypes.POINTER(ctypes.c_void_p))[0], ctypes.POINTER(ctypes.c_void_p))
+    set_value = ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_void_p, ctypes.POINTER(PROPERTYKEY), ctypes.POINTER(PROPVARIANT))(vtable[6])
+    release = ctypes.WINFUNCTYPE(ctypes.c_ulong, ctypes.c_void_p)(vtable[2])
+    try:
+        # relaunch properties first: the taskbar reads them when the ID changes
+        for pid, text in properties[1:] + properties[:1]:
+            key = PROPERTYKEY(guid(app_model), pid)
+            variant = PROPVARIANT(vt=31, value=text)  # VT_LPWSTR
+            if set_value(store, ctypes.byref(key), ctypes.byref(variant)) != 0:
+                return False
+    finally:
+        release(store)
+    return True
+
+
+def open_window(url: str) -> threading.Thread | None:
+    """Open as a standalone app window (Edge --app), falling back to the default browser.
+    Returns the thread that gives the window its own taskbar button (join it if the process is about to exit)."""
     candidates = [
         shutil.which("msedge"),
         r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
@@ -302,8 +402,11 @@ def open_window(url: str) -> None:
     edge = next((path for path in candidates if path and Path(path).exists()), None)
     if edge:
         subprocess.Popen([edge, f"--app={url}", "--window-size=1320,920"])
-    else:
-        webbrowser.open(url)
+        labeller = threading.Thread(target=give_window_own_taskbar_button, daemon=True)
+        labeller.start()
+        return labeller
+    webbrowser.open(url)
+    return None
 
 
 def run() -> None:
@@ -314,7 +417,9 @@ def run() -> None:
         try:
             with urllib.request.urlopen(url + "ping", timeout=2) as reply:
                 if reply.read() == PING_REPLY:
-                    open_window(url)
+                    labeller = open_window(url)
+                    if labeller:
+                        labeller.join()
                     return
         except Exception:
             pass  # nothing of ours here
