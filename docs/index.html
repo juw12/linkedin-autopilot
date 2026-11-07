@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="en">
+<head>
+<script>
+/* ReachPilot public demo: serve made-up data instead of the local API. */
+(() => {
+  const DEMO = {"overview": {"now": "2026-11-07 09:45", "mode": "auto", "paused": false, "token_days_left": 41, "click_tracking": true, "posts_this_week": 2, "max_per_week": 3, "posted_total": 18, "failed_total": 0, "prepared_left": 3, "next_post": {"slot": "2026-11-10 08:00", "weekday": "Tue", "images": [], "kind": "prepared", "repo": null, "angle": "launch", "title": "pocket-cad", "hook": "A tiny parametric CAD sketcher that runs in the browser.", "body": "Built a tiny parametric sketcher that runs in the browser: constraints, dimensions and a STEP export.\n\nTry it: <demo link>", "comment": ""}, "last_tick": "2026-11-07 09:30", "impressions": 4210, "engagements": 186, "posts_with_linkedin_stats": 12, "slots": ["Tue 08:00", "Wed 08:00", "Thu 08:00"], "awaiting": 0, "inbox": ""}, "hub": {"jobs": {"installed": true, "tracked": 214, "open": 214, "queue_total": 214, "today": [{"score": 96, "company": "Northwind Robotics", "title": "Mechanical Design Engineer", "location": "Singapore", "status": "New", "link": "#", "notes": "", "my_notes": "", "source": "greenhouse", "applied_on": ""}, {"score": 93, "company": "Contoso Audio", "title": "Product Design Engineer", "location": "Taipei, Taiwan", "status": "New", "link": "#", "notes": "", "my_notes": "", "source": "lever", "applied_on": ""}, {"score": 91, "company": "Fabrikam Motion", "title": "R&D Mechanical Engineer", "location": "Penang, Malaysia", "status": "New", "link": "#", "notes": "", "my_notes": "", "source": "workday", "applied_on": ""}, {"score": 88, "company": "Globex Hardware", "title": "NPI Mechanical Engineer", "location": "Shenzhen, China", "status": "Stopped", "link": "#", "notes": "NOT submitted: the site asked for an e-mailed verification code. Finish it in the apply session.", "my_notes": "", "source": "greenhouse", "applied_on": ""}, {"score": 86, "company": "Initech Labs", "title": "Enclosure Design Engineer", "location": "Singapore", "status": "New", "link": "#", "notes": "", "my_notes": "", "source": "lever", "applied_on": ""}, {"score": 84, "company": "Umbrella Medical", "title": "Mechanical Engineer, Devices", "location": "Penang, Malaysia", "status": "New", "link": "#", "notes": "", "my_notes": "", "source": "workday", "applied_on": ""}, {"score": 82, "company": "Wayne Instruments", "title": "Design for Manufacturing Engineer", "location": "Taipei, Taiwan", "status": "New", "link": "#", "notes": "", "my_notes": "", "source": "greenhouse", "applied_on": ""}], "applied_total": 9, "applied_week": 3, "applied": [], "follow_ups": [], "needs_you": [{"score": 88, "company": "Globex Hardware", "title": "NPI Mechanical Engineer", "location": "Shenzhen, China", "status": "Stopped", "link": "#", "notes": "NOT submitted: the site asked for an e-mailed verification code. Finish it in the apply session.", "my_notes": "", "source": "greenhouse", "applied_on": ""}], "status_counts": {"New": 204, "Applied": 9, "Stopped": 1}, "workday_companies": ["Fabrikam Motion", "Umbrella Medical"], "blocked_companies": [], "last_run": "2026-11-07 07:31", "last_summary": "12 new roles from 37 company boards", "last_error": "", "fill_me": [], "tracker": ""}, "email": {"installed": true, "sent_total": 128, "sent_today": 6, "sent_week": 41, "series": [{"x": "2026-10-25", "y": 0}, {"x": "2026-10-26", "y": 2}, {"x": "2026-10-27", "y": 5}, {"x": "2026-10-28", "y": 9}, {"x": "2026-10-29", "y": 14}, {"x": "2026-10-30", "y": 11}, {"x": "2026-10-31", "y": 8}, {"x": "2026-11-01", "y": 12}, {"x": "2026-11-02", "y": 16}, {"x": "2026-11-03", "y": 10}, {"x": "2026-11-04", "y": 13}, {"x": "2026-11-05", "y": 9}, {"x": "2026-11-06", "y": 12}, {"x": "2026-11-07", "y": 7}], "regions": [["Singapore", 44], ["Penang", 21], ["Kuala Lumpur", 18], ["Bangkok", 15], ["Johor", 12], ["Hsinchu", 9]], "recent": [{"at": "2026-11-07 09:12", "company": "Acme Precision", "title": "Mechanical Engineer", "region": "Singapore", "source": "jobstreet", "url": "#", "to_domain": "@example.com"}, {"at": "2026-11-07 08:40", "company": "Blue Harbor Systems", "title": "Product Engineer", "region": "Penang", "source": "linkedin", "url": "#", "to_domain": "@example.org"}, {"at": "2026-11-06 17:05", "company": "Summit Moulding", "title": "Tooling Engineer", "region": "Johor", "source": "jobstreet", "url": "#", "to_domain": "@example.net"}, {"at": "2026-11-06 11:22", "company": "Orbit Electronics", "title": "NPI Engineer", "region": "Bangkok", "source": "jobstreet", "url": "#", "to_domain": "@example.com"}, {"at": "2026-11-05 15:48", "company": "Cedar Medtech", "title": "R&D Engineer", "region": "Singapore", "source": "linkedin", "url": "#", "to_domain": "@example.org"}], "leads_total": 3, "leads": [{"title": "Senior Mechanical Engineer", "company": "Lumen Optics", "region": "Singapore", "url": "#", "fit": 27, "salary": ""}, {"title": "Manufacturing Engineer", "company": "Delta Motion", "region": "Kuala Lumpur", "url": "#", "fit": 24, "salary": ""}, {"title": "Product Development Engineer", "company": "Quartz Devices", "region": "Hsinchu", "url": "#", "fit": 23, "salary": ""}], "relay_ok": true, "followups_enabled": true, "followup_after_days": 7, "max_per_day": 40, "report_to": "", "last_run": "2026-11-07 09:12", "last_run_age_hours": 0.6, "bigtech_last_run": "2026-11-07 08:00", "log_tail": []}, "promote": {"installed": false, "planned": ["Find creators / communities that fit each project (UGC, newsletters, small YouTubers)", "Write a short, personal pitch per contact from the project's real README facts", "Send from your Gmail relay with daily caps and one polite follow-up", "Track replies and which projects get picked up, next to LinkedIn reach"], "folder": ""}, "tasks": {"linkedin": {"name": "LinkedIn posts", "installed": true, "state": "Ready", "last_run": "Sat 7 Nov · 09:30", "next_run": "Sat 7 Nov · 10:00", "last_result": "0", "ok": true}, "jobs": {"name": "Job search", "installed": true, "state": "Ready", "last_run": "Sat 7 Nov · 07:30", "next_run": "Sat 7 Nov · 12:30", "last_result": "0", "ok": true}, "email": {"name": "Email applications", "installed": true, "state": "Ready", "last_run": "Sat 7 Nov · 09:00", "next_run": "Sat 7 Nov · 10:00", "last_result": "0", "ok": true}, "bigtech": {"name": "Big Tech watch", "installed": true, "state": "Ready", "last_run": "Sat 7 Nov · 08:00", "next_run": "Sat 7 Nov · 12:00", "last_result": "0", "ok": true}}, "todo": [{"priority": 1, "module": "Jobs", "title": "1 application stopped and needs you", "detail": "The site asked for an e-mailed verification code. ReachPilot never answers human checks; open the apply session and finish it.", "action": "jobs_apply", "action_label": "Start apply session", "links": [{"label": "Globex Hardware - NPI Mechanical Engineer", "url": "#"}]}, {"priority": 2, "module": "Jobs", "title": "7 jobs ready to apply today", "detail": "Forms are pre-filled with your CV, cover letter and answers. You glance and press Submit.", "action": "jobs_apply", "action_label": "Start apply session", "links": []}, {"priority": 3, "module": "Jobs", "title": "Workday sites need your own sign-in", "detail": "Fabrikam Motion and Umbrella Medical use Workday accounts, so these are applied by hand.", "action": null, "action_label": "", "links": []}, {"priority": 4, "module": "Email", "title": "3 good leads have no recruiter e-mail", "detail": "They can only be applied to on the company site.", "action": "email_open_leads", "action_label": "Open leads", "links": []}], "help": [{"module": "LinkedIn", "runs": "Every 30 minutes; posts Tue/Wed/Thu 08:00.", "auto": "Picks a project, writes the post from real README facts, adds screenshots, posts through the official API, learns from clicks and stars.", "you": "Renew the LinkedIn login every 60 days (you get a reminder here and a Windows notification)."}, {"module": "Jobs", "runs": "Searches company job boards at 07:30 and 12:30.", "auto": "Finds roles that fit your CV, scores them, writes cover letters, keeps the tracker. The apply session fills each form for you.", "you": "Open the apply session, glance at each form, press Submit and type an e-mailed code if a site asks. Sites with a human check never get submitted by the bot."}, {"module": "Email", "runs": "E-mail applications every hour; Big Tech watch every 4 hours.", "auto": "Reads job ads, and when an ad lists a recruiter e-mail it sends your CV and a tailored letter from your sending Gmail; replies go to your personal inbox. One follow-up after 7 days if no reply.", "you": "Read replies and answer the ones you like."}, {"module": "Promote", "runs": "Planned.", "auto": "Will find creators and communities that fit each project and send a short personal pitch.", "you": "Approve the first batch of pitches."}]}, "schedule": [{"slot": "2026-11-10 08:00", "weekday": "Tue", "images": [], "kind": "prepared", "repo": null, "angle": "launch", "title": "pocket-cad", "hook": "A tiny parametric CAD sketcher that runs in the browser.", "body": "Built a tiny parametric sketcher that runs in the browser: constraints, dimensions and a STEP export.\n\nTry it: <demo link>", "comment": ""}, {"slot": "2026-11-11 08:00", "weekday": "Wed", "images": [], "kind": "prepared", "repo": null, "angle": "deep dive", "title": "lab-notes", "hook": "One feature, explained: searchable test logs.", "body": "One feature from lab-notes: every test log becomes searchable the moment it lands in the folder.", "comment": ""}, {"slot": "2026-11-12 08:00", "weekday": "Thu", "images": [], "kind": "prepared", "repo": null, "angle": "behind the build", "title": "weather-kit", "hook": "How the sensor enclosure went from three parts to one.", "body": "Behind the build: how the weather-kit enclosure went from three printed parts to one.", "comment": ""}], "history": [], "github": {"latest_day": "2026-11-06", "repos": [{"repo": "pocket-cad", "stars": 24, "li_uniques": 31, "li_views": 58, "clicks_30d": 19, "last_posted": "2026-11-01", "posts": 3}, {"repo": "lab-notes", "stars": 11, "li_uniques": 14, "li_views": 22, "clicks_30d": 8, "last_posted": "2026-10-25", "posts": 2}, {"repo": "weather-kit", "stars": 7, "li_uniques": 9, "li_views": 15, "clicks_30d": 5, "last_posted": "2026-10-18", "posts": 2}, {"repo": "gear-calc", "stars": 5, "li_uniques": 4, "li_views": 6, "clicks_30d": 2, "last_posted": null, "posts": 0}], "stars_series": [{"x": "2026-11-01", "y": 40}, {"x": "2026-11-02", "y": 41}, {"x": "2026-11-03", "y": 41}, {"x": "2026-11-04", "y": 43}, {"x": "2026-11-05", "y": 44}, {"x": "2026-11-06", "y": 46}, {"x": "2026-11-07", "y": 47}], "visitors_series": [{"x": "2026-11-01", "y": 3}, {"x": "2026-11-02", "y": 8}, {"x": "2026-11-03", "y": 5}, {"x": "2026-11-04", "y": 4}, {"x": "2026-11-05", "y": 11}, {"x": "2026-11-06", "y": 6}, {"x": "2026-11-07", "y": 9}], "clicks_series": [{"x": "2026-11-01", "y": 1}, {"x": "2026-11-02", "y": 5}, {"x": "2026-11-03", "y": 3}, {"x": "2026-11-04", "y": 2}, {"x": "2026-11-05", "y": 7}, {"x": "2026-11-06", "y": 4}, {"x": "2026-11-07", "y": 6}], "clicks_30d_total": 34}, "learning": {"records": 0, "repo": [], "angle": []}, "log": ["2026-11-07 09:30:02,114 INFO Tick: next slot Tue 08:00 (pocket-cad, launch angle)", "2026-11-07 09:00:01,870 INFO GitHub: 4 public repos, no new releases", "2026-11-06 08:00:04,532 INFO Posted lab-notes (deep dive) through the official API"]};
+  const REPLIES = {"jobs_apply": "Demo: on your PC this opens the apply session, which fills each form and waits for you to press Submit.", "email_open_leads": "Demo: on your PC this opens the list of good jobs that have no recruiter e-mail."};
+  const realFetch = window.fetch.bind(window);
+  const json = (body) => new Response(JSON.stringify(body), { headers: { "Content-Type": "application/json" } });
+  window.fetch = async (url, options = {}) => {
+    const path = String(url);
+    if (path.endsWith("/api/data")) return json(DEMO);
+    if (path.endsWith("/api/action")) {
+      let name = "";
+      try { name = JSON.parse(options.body || "{}").name || ""; } catch (error) { name = ""; }
+      return json({ message: REPLIES[name] || "Demo: on your PC this button runs that task right away." });
+    }
+    return realFetch(url, options);
+  };
+})();
+</script>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ReachPilot - demo</title>
+<meta name="theme-color" content="#0a66c2">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+  :root {
+    --bg: #f3f2ef; --card: #fff; --ink: #1d2226; --muted: #5e6b75; --line: #e3e6e8;
+    --blue: #0a66c2; --blue-soft: #e8f3ff; --green: #057642; --green-soft: #e6f4ea;
+    --amber: #915907; --amber-soft: #fdf3e1; --red: #b42318; --red-soft: #fdecea;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.5 "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--ink); }
+  header.top { position: sticky; top: 0; z-index: 2; background: var(--card); border-bottom: 1px solid var(--line); }
+  .bar { max-width: 1180px; margin: 0 auto; padding: 10px 20px; display: flex; align-items: center; gap: 18px; }
+  .brand { margin: 0; font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .logo { width: 28px; height: 28px; display: block; }
+  nav { display: flex; gap: 2px; min-width: 0; }
+  nav button { border: 0; background: none; padding: 8px 12px; border-radius: 6px; font: inherit; color: var(--muted); cursor: pointer; white-space: nowrap; }
+  nav button:hover { background: #f1f3f4; color: var(--ink); }
+  nav button:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+  nav button[aria-selected="true"] { color: var(--blue); background: var(--blue-soft); font-weight: 600; }
+  .updated { margin-left: auto; color: var(--muted); font-size: 12px; white-space: nowrap; }
+  @media (max-width: 760px) {
+    .bar { flex-wrap: wrap; gap: 4px 12px; padding: 8px 14px 0; }
+    .brand { font-size: 15px; }
+    nav { order: 3; flex: 1 0 100%; overflow-x: auto; scrollbar-width: none; margin: 0 -14px; padding: 0 14px 6px; }
+    nav::-webkit-scrollbar { display: none; }
+    nav button { min-height: 40px; padding: 8px 11px; }
+    main { padding: 14px; }
+  }
+  main { max-width: 1180px; margin: 0 auto; padding: 20px; }
+  section[hidden] { display: none; }
+  h2 { font-size: 18px; margin: 0 0 12px; }
+  h3 { font-size: 15px; margin: 0 0 10px; }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); margin-bottom: 18px; }
+  .card { background: var(--card); border-radius: 10px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .kpi .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  .kpi .value { font-size: 26px; font-weight: 700; margin-top: 2px; }
+  .kpi .note { color: var(--muted); font-size: 12px; }
+  .wide { grid-column: 1 / -1; }
+  .two { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); margin-bottom: 18px; }
+  .next { border-left: 5px solid var(--blue); }
+  .next .when { font-weight: 600; color: var(--blue); }
+  .next .title { font-size: 20px; font-weight: 700; margin: 2px 0; }
+  .badge { display: inline-block; padding: 1px 9px; border-radius: 12px; font-size: 12px; font-weight: 600; background: var(--blue-soft); color: var(--blue); }
+  .badge.good { background: var(--green-soft); color: var(--green); }
+  .badge.warn { background: var(--amber-soft); color: var(--amber); }
+  .badge.bad { background: var(--red-soft); color: var(--red); }
+  .badge.grey { background: #eef0f2; color: var(--muted); }
+  .post { background: var(--card); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,.08); border-left: 5px solid var(--blue); }
+  .post.auto, .post.cap { border-left-color: #a9b3ba; background: #fafafa; }
+  .post.event { border-left-color: var(--green); }
+  .post .head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .post .when { font-weight: 600; }
+  .post .num { display: inline-block; min-width: 26px; text-align: center; background: var(--ink); color: #fff; border-radius: 4px; margin-right: 8px; font-size: 12px; }
+  .post h4 { margin: 6px 0 0; font-size: 16px; }
+  .post .hook { color: #38434f; margin: 2px 0 8px; }
+  .thumbs { display: flex; gap: 8px; overflow-x: auto; }
+  .thumbs img { flex: none; width: 170px; height: 96px; object-fit: cover; border-radius: 6px; border: 1px solid var(--line); background: #eef0f2; }
+  details summary { cursor: pointer; color: var(--blue); font-weight: 600; margin-top: 8px; }
+  pre.text { white-space: pre-wrap; font: inherit; background: #f8f9fa; padding: 12px; border-radius: 6px; margin: 8px 0 0; }
+  table { width: 100%; border-collapse: collapse; }
+  .scroll { overflow-x: auto; }
+  .scroll table { min-width: 720px; }
+  .scroll td:first-child { white-space: nowrap; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.quiet td { color: var(--muted); }
+  tr.quiet td a { color: var(--muted); }
+  .empty { color: var(--muted); padding: 18px; text-align: center; background: #fafafa; border-radius: 8px; }
+  .hint { color: var(--muted); font-size: 13px; }
+  .hint code { background: #eef0f2; padding: 1px 5px; border-radius: 4px; }
+  svg.chart { width: 100%; height: auto; }
+  svg.chart .axis { stroke: var(--line); }
+  svg.chart .line { fill: none; stroke: var(--blue); stroke-width: 2.5; }
+  svg.chart .dot { fill: var(--blue); }
+  svg.chart text { fill: var(--muted); font-size: 11px; }
+  .rank { display: grid; grid-template-columns: 150px 1fr 60px; gap: 8px; align-items: center; padding: 4px 0; }
+  .rank .track { background: #eef0f2; border-radius: 4px; height: 12px; overflow: hidden; }
+  .rank .fill { background: var(--blue); height: 100%; }
+  .log { font: 12px/1.6 Consolas, monospace; white-space: pre-wrap; margin: 0; max-height: 70vh; overflow: auto; }
+  .log .t { color: var(--muted); }
+  .log .w { color: var(--amber); }
+  .log .e { color: var(--red); }
+  a { color: var(--blue); }
+
+  .btn { border: 0; border-radius: 6px; padding: 7px 14px; font: inherit; font-weight: 600; cursor: pointer; background: var(--blue); color: #fff; }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.ghost { background: var(--blue-soft); color: var(--blue); }
+  .btn:focus-visible, .help-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .btn:disabled { opacity: .55; cursor: default; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .help-btn { border: 1px solid var(--line); background: var(--card); width: 32px; height: 32px; border-radius: 50%; font: 700 15px "Segoe UI", sans-serif; color: var(--blue); cursor: pointer; flex: none; }
+  .tab-count { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; border-radius: 9px; background: var(--red); color: #fff; font-size: 11px; line-height: 18px; text-align: center; font-weight: 700; }
+  .todo { background: var(--card); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,.08); border-left: 5px solid var(--amber); }
+  .todo.p1 { border-left-color: var(--red); }
+  .todo.p3 { border-left-color: #a9b3ba; }
+  .todo h4 { margin: 2px 0 2px; font-size: 15px; }
+  .todo ul { margin: 8px 0 0; padding-left: 18px; }
+  .todo li { margin: 2px 0; }
+  .module { border-top: 4px solid var(--blue); }
+  .module.jobs { border-top-color: var(--green); }
+  .module.email { border-top-color: #7c3aed; }
+  .module.promote { border-top-color: #a9b3ba; }
+  .module .big { font-size: 24px; font-weight: 700; }
+  .module h3 { display: flex; justify-content: space-between; align-items: center; }
+  .toast { position: fixed; right: 18px; bottom: 18px; z-index: 5; background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.25); max-width: 380px; }
+  .toast[hidden] { display: none; }
+  dialog.help { border: 0; border-radius: 12px; padding: 0; max-width: 720px; width: calc(100% - 32px); box-shadow: 0 10px 40px rgba(0,0,0,.3); }
+  dialog.help::backdrop { background: rgba(0,0,0,.35); }
+  dialog.help .inner { padding: 20px 22px; max-height: 80vh; overflow: auto; }
+  dialog.help .mod { border-top: 1px solid var(--line); padding: 12px 0; }
+  dialog.help dt { font-weight: 600; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .03em; margin-top: 6px; }
+  dialog.help dd { margin: 0; }
+</style>
+</head>
+<body>
+<div role="note" style="background:#fff7d6;border-bottom:1px solid #e9d27a;color:#5b4a00;font:14px/1.4 system-ui,sans-serif;padding:8px 16px;text-align:center">Demo with made-up data. ReachPilot itself runs locally on Windows: <a href="https://github.com/juw12/reachpilot" style="color:#5b4a00;font-weight:600">source on GitHub</a></div>
+<header class="top">
+  <div class="bar">
+    <h1 class="brand"><img class="logo" src="icon.svg" alt="" width="28" height="28">ReachPilot</h1>
+    <nav role="tablist">
+      <button role="tab" data-tab="overview" aria-selected="true">Overview</button>
+      <button role="tab" data-tab="todo">To do<span class="tab-count" id="todo-count" hidden></span></button>
+      <button role="tab" data-tab="linkedin">LinkedIn</button>
+      <button role="tab" data-tab="schedule">Schedule</button>
+      <button role="tab" data-tab="reach">Reach</button>
+      <button role="tab" data-tab="github">GitHub</button>
+      <button role="tab" data-tab="learning">Learning</button>
+      <button role="tab" data-tab="jobs">Jobs</button>
+      <button role="tab" data-tab="email">Email</button>
+      <button role="tab" data-tab="promote">Promote</button>
+      <button role="tab" data-tab="log">Log</button>
+    </nav>
+    <span class="updated" id="updated">Loading…</span>
+    <button class="help-btn" id="help-open" aria-label="Help: what ReachPilot does and what it needs from you" title="Help">?</button>
+  </div>
+</header>
+
+<main>
+  <section id="overview"></section>
+  <section id="todo" hidden></section>
+  <section id="linkedin" hidden></section>
+  <section id="schedule" hidden></section>
+  <section id="reach" hidden></section>
+  <section id="github" hidden></section>
+  <section id="learning" hidden></section>
+  <section id="jobs" hidden></section>
+  <section id="email" hidden></section>
+  <section id="promote" hidden></section>
+  <section id="log" hidden></section>
+</main>
+<div class="toast" id="toast" role="status" hidden></div>
+<dialog class="help" id="help"><div class="inner" id="help-body"></div></dialog>
+
+<script>
+const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const num = (value) => (value === null || value === undefined ? "–" : Number(value).toLocaleString());
+const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function niceDate(stamp) {
+  if (!stamp) return "–";
+  const [date, time] = stamp.split(" ");
+  const [y, m, d] = date.split("-").map(Number);
+  const day = new Date(y, m - 1, d);
+  return `${DAYS[day.getDay()]} ${d} ${MONTHS[m - 1]}` + (time ? ` · ${time}` : "");
+}
+
+const KIND = {
+  prepared: ["Prepared post", ""],
+  event: ["New on GitHub", "good"],
+  drafted: ["Drafted", "warn"],
+  auto: ["Picked on the day", "grey"],
+  cap: ["Weekly limit", "grey"],
+};
+const STATUS = { posted: "good", ready: "warn", awaiting_approval: "warn", failed: "bad", skipped: "grey" };
+
+function lineChart(series, emptyText) {
+  if (!series.length) return `<div class="empty">${esc(emptyText)}</div>`;
+  const W = 520, H = 170, L = 36, R = 14, T = 14, B = 26;
+  const max = Math.max(1, ...series.map((p) => p.y));
+  const x = (i) => L + (series.length === 1 ? (W - L - R) / 2 : (i * (W - L - R)) / (series.length - 1));
+  const y = (v) => H - B - (v * (H - T - B)) / max;
+  const points = series.map((p, i) => `${x(i)},${y(p.y)}`).join(" ");
+  const dots = series.map((p, i) => `<circle class="dot" cx="${x(i)}" cy="${y(p.y)}" r="3.5"><title>${esc(p.x)}: ${num(p.y)}</title></circle>`).join("");
+  const first = series[0].x, last = series[series.length - 1].x;
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img">
+    <line class="axis" x1="${L}" y1="${H - B}" x2="${W - R}" y2="${H - B}"/>
+    <line class="axis" x1="${L}" y1="${T}" x2="${W - R}" y2="${T}" stroke-dasharray="3 4"/>
+    <text x="${L - 6}" y="${T + 4}" text-anchor="end">${num(max)}</text>
+    <text x="${L - 6}" y="${H - B + 4}" text-anchor="end">0</text>
+    ${series.length > 1 ? `<polyline class="line" points="${points}"/>` : ""}${dots}
+    <text x="${L}" y="${H - 6}">${esc(niceDate(first))}</text>
+    ${series.length > 1 ? `<text x="${W - R}" y="${H - 6}" text-anchor="end">${esc(niceDate(last))}</text>` : ""}
+  </svg>`;
+}
+
+function kpi(label, value, note = "") {
+  return `<div class="card kpi"><div class="label">${esc(label)}</div><div class="value">${value}</div><div class="note">${note}</div></div>`;
+}
+
+function postCard(entry, index) {
+  const [kindLabel, kindClass] = KIND[entry.kind] || [entry.kind, ""];
+  const thumbs = entry.images.length ? `<div class="thumbs">${entry.images.map((src) => `<img src="${esc(src)}" alt="" loading="lazy">`).join("")}</div>` : "";
+  const full = entry.body
+    ? `<details><summary>Full post text</summary><pre class="text">${esc(entry.body)}</pre>${entry.comment ? `<div class="hint" style="margin-top:8px"><b>First comment</b></div><pre class="text">${esc(entry.comment)}</pre>` : ""}</details>`
+    : "";
+  return `<article class="post ${esc(entry.kind)}">
+    <div class="head">
+      <div class="when"><span class="num">${index + 1}</span>${esc(niceDate(entry.slot))} WIB</div>
+      <div><span class="badge ${kindClass}">${esc(kindLabel)}</span> ${entry.angle && entry.angle !== "auto" && entry.angle !== "-" ? `<span class="badge grey">${esc(entry.angle)}</span>` : ""}</div>
+    </div>
+    <h4>${esc(entry.title)}</h4>
+    <p class="hook">${esc(entry.hook)}</p>
+    ${thumbs}${full}
+  </article>`;
+}
+
+function renderLinkedin(d) {
+  const o = d.overview;
+  const next = o.next_post;
+  const tokenNote = o.token_days_left === null ? "Not connected: python autopilot.py auth" : o.token_days_left < 7 ? "Renew soon: python autopilot.py auth" : "Connected";
+  const tokenBadge = o.token_days_left === null ? "bad" : o.token_days_left < 7 ? "warn" : "good";
+  const state = o.paused ? `<span class="badge warn">Paused</span>` : `<span class="badge good">Running</span>`;
+  document.getElementById("linkedin").innerHTML = `
+    <div class="grid">
+      <div class="card next wide">
+        ${next ? `<div class="when">Next post · ${esc(niceDate(next.slot))} WIB</div>
+          <div class="title">${esc(next.title)}</div>
+          <div class="hint">${esc(next.hook)}</div>` : `<div class="hint">Nothing scheduled.</div>`}
+      </div>
+      ${kpi("Status", state, `Mode: ${esc(o.mode)} · last run ${esc(o.last_tick ? niceDate(o.last_tick) : "–")}`)}
+      ${kpi("This week", `${o.posts_this_week} / ${o.max_per_week}`, `Slots: ${esc(o.slots.join(", "))} WIB`)}
+      ${kpi("Posted", num(o.posted_total), o.failed_total ? `<span class="badge bad">${o.failed_total} failed</span>` : "All good")}
+      ${kpi("Prepared posts left", num(o.prepared_left), "Then the bot writes them itself")}
+      ${kpi("LinkedIn login", o.token_days_left === null ? "–" : `${o.token_days_left} days`, `<span class="badge ${tokenBadge}">${esc(tokenNote)}</span>`)}
+      ${kpi("Click tracking", o.click_tracking ? "On" : "Off", o.click_tracking ? "GoatCounter counts “Try it” clicks" : "Run: python autopilot.py goatcounter")}
+    </div>
+    <div class="two">
+      <div class="card"><h3>GitHub stars (all projects)</h3>${lineChart(d.github.stars_series, "Collected daily from tomorrow on.")}</div>
+      <div class="card"><h3>“Try it” clicks per day</h3>${lineChart(d.github.clicks_series, "No clicks yet. They start once posts go out.")}</div>
+    </div>`;
+}
+
+function renderSchedule(d) {
+  const items = d.schedule;
+  document.getElementById("schedule").innerHTML = `
+    <h2>Upcoming posts</h2>
+    <p class="hint">Every post goes out at the slot time, with links in the first comment. Prepared posts are fixed. “Picked on the day” is decided at 08:00 from what's new on GitHub and what has performed best so far.</p>
+    ${items.length ? items.map(postCard).join("") : `<div class="empty">Nothing scheduled.</div>`}`;
+}
+
+function renderReach(d) {
+  const o = d.overview;
+  const posted = d.history.filter((p) => p.status === "posted");
+  const rate = o.impressions ? ((o.engagements / o.impressions) * 100).toFixed(1) + "%" : "–";
+  const visitors = posted.reduce((sum, p) => sum + (p.visitors || 0), 0);
+  const stars = posted.reduce((sum, p) => sum + (p.stars || 0), 0);
+  const rows = d.history.map((p) => `<tr>
+      <td>${esc(niceDate(p.slot))}</td>
+      <td><b>${esc(p.title)}</b><div class="hint">${esc(p.hook)}</div>${p.error ? `<div class="badge bad" title="${esc(p.error)}">Error: ${esc(p.error.slice(0, 80))}</div>` : ""}</td>
+      <td><span class="badge ${STATUS[p.status] || "grey"}">${esc(p.status)}</span></td>
+      <td class="num">${num(p.impressions)}</td>
+      <td class="num">${num(p.engagements)}</td>
+      <td class="num">${num(p.visitors)}</td>
+      <td class="num">${num(p.stars)}</td>
+      <td class="num">${num(p.try_clicks)}</td>
+      <td>${p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noopener">Open</a>` : ""}</td>
+    </tr>`).join("");
+  document.getElementById("reach").innerHTML = `
+    <div class="grid">
+      ${kpi("Posts published", num(posted.length))}
+      ${kpi("Impressions", o.posts_with_linkedin_stats ? num(o.impressions) : "–", "From your LinkedIn export")}
+      ${kpi("Engagement rate", rate, "Reactions, comments, reposts, clicks")}
+      ${kpi("GitHub visitors from LinkedIn", num(visitors), "Within 2 weeks of each post")}
+      ${kpi("Stars after posts", num(stars), "Gained in the week after")}
+      ${kpi("“Try it” clicks (30 days)", num(d.github.clicks_30d_total))}
+    </div>
+    <div class="card" style="margin-bottom:18px">
+      <h3>Every post</h3>
+      ${d.history.length ? `<div class="scroll"><table>
+        <thead><tr><th>Slot</th><th>Post</th><th>Status</th><th class="num">Impressions</th><th class="num">Engagements</th><th class="num">GitHub visitors</th><th class="num">Stars</th><th class="num">Try-it clicks</th><th></th></tr></thead>
+        <tbody>${rows}</tbody></table></div>` : `<div class="empty">Nothing posted yet. The first post goes out ${esc(o.next_post ? niceDate(o.next_post.slot) : "soon")} WIB.</div>`}
+    </div>
+    <div class="card">
+      <h3>Where reach numbers come from</h3>
+      <p class="hint">LinkedIn doesn't let apps read impressions for personal profiles, so GitHub visitors, stars and “Try it” clicks are measured automatically.
+      To add LinkedIn's own impressions and engagements: open your LinkedIn post analytics, export to Excel, and save the file in
+      <code>${esc(o.inbox)}</code>. The bot imports it within 30 minutes, and its numbers then take priority over the GitHub-based score.</p>
+    </div>`;
+}
+
+function renderGithub(d) {
+  const g = d.github;
+  const activity = (r) => (r.stars || 0) + (r.li_uniques || 0) + (r.li_views || 0) + (r.clicks_30d || 0) + (r.posts || 0);
+  const repos = [...g.repos].sort((a, b) => (activity(b) > 0) - (activity(a) > 0));
+  const rows = repos.map((r) => `<tr class="${activity(r) ? "" : "quiet"}">
+      <td><a href="https://github.com/juw12/${esc(r.repo)}" target="_blank" rel="noopener">${esc(r.repo)}</a></td>
+      <td class="num">${num(r.stars)}</td>
+      <td class="num">${num(r.li_uniques)}</td>
+      <td class="num">${num(r.li_views)}</td>
+      <td class="num">${num(r.clicks_30d)}</td>
+      <td class="num">${num(r.posts)}</td>
+      <td>${esc(r.last_posted ? niceDate(r.last_posted) : "–")}</td>
+    </tr>`).join("");
+  document.getElementById("github").innerHTML = `
+    <div class="two">
+      <div class="card"><h3>Visitors from LinkedIn (14-day window)</h3>${lineChart(g.visitors_series, "Collected daily.")}</div>
+      <div class="card"><h3>“Try it” clicks per day</h3>${lineChart(g.clicks_series, "No clicks yet.")}</div>
+    </div>
+    <div class="card">
+      <h3>Projects ${g.latest_day ? `<span class="hint">· snapshot ${esc(niceDate(g.latest_day))}</span>` : ""}</h3>
+      ${g.repos.length ? `<div class="scroll"><table>
+        <thead><tr><th>Project</th><th class="num">Stars</th><th class="num">LinkedIn visitors</th><th class="num">LinkedIn views</th><th class="num">Try-it clicks (30d)</th><th class="num">Posts</th><th>Last posted</th></tr></thead>
+        <tbody>${rows}</tbody></table></div>` : `<div class="empty">No GitHub data yet.</div>`}
+      <p class="hint">LinkedIn visitors and views are GitHub's referrer counts over the last 14 days. Clicks come from the tracked “Try it” links.</p>
+    </div>`;
+}
+
+function rankList(items) {
+  if (!items.length) return `<div class="empty">Nothing to rank yet.</div>`;
+  const max = Math.max(...items.map((i) => i.score), 0.1);
+  return items.map((i) => `<div class="rank"><div>${esc(i.name)}</div>
+      <div class="track"><div class="fill" style="width:${(i.score / max) * 100}%"></div></div>
+      <div class="num hint">${i.score}%</div></div>`).join("");
+}
+
+function renderLearning(d) {
+  const l = d.learning;
+  document.getElementById("learning").innerHTML = `
+    <div class="card" style="margin-bottom:18px">
+      <h3>How the bot decides</h3>
+      <p class="hint">After each post it measures the result: LinkedIn numbers if you've exported them, otherwise GitHub visitors, “Try it” clicks and stars (one star counts as three visitors).
+      Projects and post styles that do better get picked more often, but untested ones still get a fair chance.
+      ${l.records ? `It has learned from <b>${l.records}</b> post${l.records === 1 ? "" : "s"} so far.` : "Learning starts about 3 days after the first post."}</p>
+    </div>
+    <div class="two">
+      <div class="card"><h3>Projects</h3>${rankList(l.repo)}</div>
+      <div class="card"><h3>Post styles</h3>${rankList(l.angle)}</div>
+    </div>`;
+}
+
+function renderLog(d) {
+  const lines = d.log.map((line) => {
+    const cls = / (ERROR|CRITICAL) /.test(line) ? "e" : / WARNING /.test(line) ? "w" : "";
+    const stamp = line.match(/^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d(,\d+)?/);
+    const rest = stamp ? line.slice(stamp[0].length) : line;
+    return `<span class="${cls}">${stamp ? `<span class="t">${esc(stamp[0].slice(5, 16))}</span>` : ""}${esc(rest)}</span>`;
+  }).join("\n");
+  const emailLines = ((d.hub && d.hub.email && d.hub.email.log_tail) || []).map(esc).join("\n");
+  document.getElementById("log").innerHTML = `<div class="two">
+    <div class="card"><h3>LinkedIn <span class="hint">(newest first)</span></h3><pre class="log">${lines || "No log yet."}</pre></div>
+    <div class="card"><h3>E-mail applications <span class="hint">(newest first)</span></h3><pre class="log">${emailLines || "No log yet."}</pre></div></div>`;
+}
+
+const TOKEN = "demo";
+let latest = null;
+
+function toast(message) {
+  const box = document.getElementById("toast");
+  box.textContent = message;
+  box.hidden = false;
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => (box.hidden = true), 4500);
+}
+
+async function act(name, button) {
+  if (button) button.disabled = true;
+  try {
+    const response = await fetch("/api/action", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-ReachPilot-Token": TOKEN },
+      body: JSON.stringify({ name }),
+    });
+    const reply = await response.json().catch(() => ({ message: "Done." }));
+    toast(reply.message || (response.ok ? "Done." : "That didn't work."));
+    setTimeout(load, 1500);
+  } catch (error) {
+    toast("Couldn't reach ReachPilot: " + error.message);
+  } finally {
+    if (button) setTimeout(() => (button.disabled = false), 1500);
+  }
+}
+
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-action]");
+  if (button) act(button.dataset.action, button);
+  const jump = event.target.closest("[data-goto]");
+  if (jump) showTab(jump.dataset.goto);
+});
+
+function actionButton(name, label, ghost = false) {
+  return name ? `<button class="btn ${ghost ? "ghost" : ""}" data-action="${esc(name)}">${esc(label)}</button>` : "";
+}
+
+function link(url, label) {
+  return url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(label)}</a>` : esc(label);
+}
+
+function todoCard(item) {
+  const links = item.links.length
+    ? `<ul>${item.links.map((l) => `<li>${link(l.url, l.label)}${l.note ? ` <span class="hint">· ${esc(l.note)}</span>` : ""}</li>`).join("")}</ul>` : "";
+  return `<div class="todo p${item.priority}">
+    <span class="badge ${item.priority === 1 ? "bad" : item.priority === 2 ? "warn" : "grey"}">${esc(item.module)}</span>
+    <h4>${esc(item.title)}</h4>
+    <div class="hint">${esc(item.detail)}</div>
+    ${links}
+    ${item.action ? `<div class="actions">${actionButton(item.action, item.action_label)}</div>` : ""}
+  </div>`;
+}
+
+function renderOverview(d) {
+  const o = d.overview, h = d.hub, jobs = h.jobs, email = h.email;
+  const next = o.next_post;
+  const urgent = h.todo.filter((t) => t.priority === 1);
+  document.getElementById("overview").innerHTML = `
+    ${h.todo.length ? `<div class="card" style="margin-bottom:18px">
+      <h3>What I need from you <span class="hint">· ${h.todo.length} item${h.todo.length === 1 ? "" : "s"}${urgent.length ? `, ${urgent.length} urgent` : ""}</span></h3>
+      ${h.todo.slice(0, 3).map(todoCard).join("")}
+      ${h.todo.length > 3 ? `<button class="btn ghost" data-goto="todo">See all ${h.todo.length}</button>` : ""}
+    </div>` : `<div class="card" style="margin-bottom:18px"><h3>Nothing needs you right now</h3><p class="hint">Everything is running on its own.</p></div>`}
+    <div class="two">
+      <div class="card module">
+        <h3>LinkedIn posts <button class="btn ghost" data-goto="linkedin">Open</button></h3>
+        ${next ? `<div class="hint">Next post · ${esc(niceDate(next.slot))} WIB</div><div class="big">${esc(next.title)}</div>` : `<div class="hint">Nothing scheduled.</div>`}
+        <div class="hint">${o.posts_this_week} / ${o.max_per_week} this week · ${num(o.posted_total)} posted · login ${o.token_days_left === null ? "not connected" : o.token_days_left + " days left"}</div>
+      </div>
+      <div class="card module jobs">
+        <h3>Job search <button class="btn ghost" data-goto="jobs">Open</button></h3>
+        ${jobs.installed ? `<div class="big">${num(jobs.today.length)} ready to apply</div>
+          <div class="hint">${num(jobs.applied_total)} applied (${num(jobs.applied_week)} this week) · ${num(jobs.open)} open matches tracked</div>
+          ${jobs.last_error ? `<div class="badge bad" style="margin-top:6px">Last search failed</div>` : ""}
+          <div class="actions">${actionButton("jobs_apply", "Start apply session")}</div>` : `<div class="hint">Not set up.</div>`}
+      </div>
+      <div class="card module email">
+        <h3>E-mail applications <button class="btn ghost" data-goto="email">Open</button></h3>
+        ${email.installed ? `<div class="big">${num(email.sent_today)} sent today</div>
+          <div class="hint">${num(email.sent_week)} this week · ${num(email.sent_total)} total · ${num(email.leads_total)} site-only leads</div>
+          ${lineChart(email.series, "No e-mails yet.")}` : `<div class="hint">Not set up.</div>`}
+      </div>
+      <div class="card module promote">
+        <h3>Project promotion <span class="badge grey">Coming soon</span></h3>
+        <div class="hint">Promotion and UGC outreach e-mails for your projects will appear here, next to LinkedIn reach.</div>
+        <div class="actions"><button class="btn ghost" data-goto="promote">What's planned</button></div>
+      </div>
+    </div>`;
+}
+
+function renderTodo(d) {
+  const items = d.hub.todo;
+  const counter = document.getElementById("todo-count");
+  counter.hidden = !items.length;
+  counter.textContent = items.length;
+  document.getElementById("todo").innerHTML = `
+    <h2>What I need from you</h2>
+    <p class="hint">Only things a robot can't or shouldn't do for you. Red first. Everything else runs by itself.</p>
+    ${items.length ? items.map(todoCard).join("") : `<div class="empty">Nothing right now.</div>`}`;
+}
+
+function renderJobs(d) {
+  const j = d.hub.jobs;
+  const section = document.getElementById("jobs");
+  if (!j.installed) {
+    section.innerHTML = `<div class="empty">Job search isn't set up${j.error ? `: ${esc(j.error)}` : ""}.</div>`;
+    return;
+  }
+  const row = (job) => `<tr>
+      <td class="num">${num(job.score)}</td>
+      <td><b>${esc(job.company)}</b><div class="hint">${esc(job.title)}</div>${job.my_notes ? `<div class="badge warn">${esc(job.my_notes.slice(0, 90))}</div>` : ""}</td>
+      <td>${esc(job.location || "")}</td>
+      <td><span class="badge grey">${esc(job.source)}</span></td>
+      <td>${link(job.link, "Open")}</td></tr>`;
+  const task = d.hub.tasks.jobs || {};
+  section.innerHTML = `
+    <div class="grid">
+      ${kpi("Ready today", num(j.today.length), `${num(j.queue_total)} in the queue`)}
+      ${kpi("Applied", num(j.applied_total), `${num(j.applied_week)} this week`)}
+      ${kpi("Follow-ups due", num(j.follow_ups.length), "Applied 7+ days ago")}
+      ${kpi("Last search", esc(j.last_run ? niceDate(j.last_run) : "–"), j.last_error ? `<span class="badge bad">Failed</span>` : esc(j.last_summary || ""))}
+      ${kpi("Next search", esc(task.next_run || "–"), "07:30 and 12:30 daily")}
+    </div>
+    <div class="card" style="margin-bottom:18px">
+      <h3>Apply</h3>
+      <p class="hint">The apply session opens each job, fills the form (CV, cover letter, visa, salary, notice period) and waits for you to press Submit. It marks the job Applied when the site confirms.</p>
+      <div class="actions">${actionButton("jobs_apply", "Start apply session")}${actionButton("jobs_search_now", "Search for new jobs now", true)}${actionButton("jobs_open_tracker", "Open tracker (Excel)", true)}${actionButton("open_answers", "Edit my answers", true)}</div>
+    </div>
+    ${j.needs_you.length ? `<div class="card" style="margin-bottom:18px"><h3>Stopped and waiting for you</h3><div class="scroll"><table>
+      <thead><tr><th class="num">Score</th><th>Job</th><th>Location</th><th>Site</th><th></th></tr></thead><tbody>${j.needs_you.map(row).join("")}</tbody></table></div></div>` : ""}
+    <div class="card" style="margin-bottom:18px"><h3>Today's list</h3>
+      ${j.today.length ? `<div class="scroll"><table><thead><tr><th class="num">Score</th><th>Job</th><th>Location</th><th>Site</th><th></th></tr></thead>
+      <tbody>${j.today.map(row).join("")}</tbody></table></div>` : `<div class="empty">Nothing queued.</div>`}</div>
+    <div class="card"><h3>Applied</h3>
+      ${j.applied.length ? `<div class="scroll"><table><thead><tr><th>Applied</th><th>Job</th><th>Status</th><th></th></tr></thead><tbody>
+      ${j.applied.map((job) => `<tr><td>${esc(job.applied_on)}</td><td><b>${esc(job.company)}</b><div class="hint">${esc(job.title)}</div></td><td><span class="badge good">${esc(job.status)}</span></td><td>${link(job.link, "Open")}</td></tr>`).join("")}
+      </tbody></table></div>` : `<div class="empty">No applications yet. Start an apply session to send the first ones.</div>`}</div>`;
+}
+
+function renderEmail(d) {
+  const e = d.hub.email;
+  const section = document.getElementById("email");
+  if (!e.installed) {
+    section.innerHTML = `<div class="empty">E-mail applications aren't set up${e.error ? `: ${esc(e.error)}` : ""}.</div>`;
+    return;
+  }
+  const task = d.hub.tasks.email || {};
+  section.innerHTML = `
+    <div class="grid">
+      ${kpi("Sent today", num(e.sent_today), `Cap ${num(e.max_per_day)} per day`)}
+      ${kpi("This week", num(e.sent_week))}
+      ${kpi("All time", num(e.sent_total))}
+      ${kpi("Site-only leads", num(e.leads_total), "No recruiter e-mail in the ad")}
+      ${kpi("Sending", e.relay_ok ? "Ready" : "Not confirmed", e.relay_ok ? "Gmail relay OK" : "Run a test send")}
+      ${kpi("Next run", esc(task.next_run || "–"), `Last activity ${esc(e.last_run ? niceDate(e.last_run) : "–")}`)}
+    </div>
+    <div class="two">
+      <div class="card"><h3>Applications sent per day</h3>${lineChart(e.series, "No e-mails yet.")}</div>
+      <div class="card"><h3>Where they went</h3>${e.regions.length ? e.regions.map(([name, count]) => `<div class="rank"><div>${esc(name)}</div><div class="track"><div class="fill" style="width:${(count / e.regions[0][1]) * 100}%"></div></div><div class="num hint">${count}</div></div>`).join("") : `<div class="empty">Nothing yet.</div>`}</div>
+    </div>
+    <div class="card" style="margin-bottom:18px">
+      <h3>Controls</h3>
+      <p class="hint">Sends from ${esc(e.report_to || "your Gmail")} with your CV; replies go to your personal inbox. ${e.followups_enabled ? `One follow-up after ${esc(e.followup_after_days)} days if nobody replied.` : "Follow-ups are off."}</p>
+      <div class="actions">${actionButton("email_run_now", "Run now")}${actionButton("email_preview", "Preview next e-mails (sends nothing)", true)}${actionButton("email_open_leads", "Open site-only leads", true)}</div>
+    </div>
+    <div class="card" style="margin-bottom:18px"><h3>Recently sent</h3><div class="scroll"><table>
+      <thead><tr><th>Sent</th><th>Job</th><th>Region</th><th>Recruiter</th><th></th></tr></thead><tbody>
+      ${e.recent.map((r) => `<tr><td>${esc(niceDate(r.at))}</td><td><b>${esc(r.company)}</b><div class="hint">${esc(r.title)}</div></td><td>${esc(r.region)}</td><td class="hint">@${esc(r.to_domain)}</td><td>${link(r.url, "Ad")}</td></tr>`).join("")}
+      </tbody></table></div></div>
+    <div class="card"><h3>Best site-only leads</h3><p class="hint">Good fits whose ad has no e-mail address, so they need applying on the site.</p>
+      ${e.leads.length ? `<div class="scroll"><table><thead><tr><th class="num">Fit</th><th>Job</th><th>Region</th><th>Salary</th><th></th></tr></thead><tbody>
+      ${e.leads.map((l) => `<tr><td class="num">${num(l.fit)}</td><td><b>${esc(l.company)}</b><div class="hint">${esc(l.title)}</div></td><td>${esc(l.region)}</td><td class="hint">${esc(l.salary || "–")}</td><td>${link(l.url, "Open")}</td></tr>`).join("")}
+      </tbody></table></div>` : `<div class="empty">None.</div>`}</div>`;
+}
+
+function renderPromote(d) {
+  const p = d.hub.promote;
+  document.getElementById("promote").innerHTML = `
+    <div class="card module promote">
+      <h3>Project promotion <span class="badge grey">${p.installed ? "Set up" : "Coming soon"}</span></h3>
+      <p class="hint">This tab is reserved for the promotion / UGC e-mail automation for your projects. When it's built it drops into <code>${esc(p.folder)}</code> and shows up here and in "What I need from you".</p>
+      <h3 style="margin-top:14px">Planned</h3>
+      <ul>${p.planned.map((step) => `<li>${esc(step)}</li>`).join("")}</ul>
+    </div>`;
+}
+
+function renderHelp(d) {
+  document.getElementById("help-body").innerHTML = `
+    <h2>How ReachPilot works</h2>
+    <p class="hint">ReachPilot runs your outreach automations on a schedule and only asks you for the few things that need a human. The "To do" tab always shows what those are right now.</p>
+    ${d.hub.help.map((m) => `<div class="mod"><h3>${esc(m.module)}</h3><dl>
+      <dt>When</dt><dd>${esc(m.runs)}</dd>
+      <dt>Does by itself</dt><dd>${esc(m.auto)}</dd>
+      <dt>Needs you</dt><dd>${esc(m.you)}</dd></dl></div>`).join("")}
+    <div class="mod"><h3>Safety rules</h3><p class="hint">It never solves CAPTCHAs or human checks, never creates accounts or signs in for you, and never posts or e-mails anything made up. Everything stays on this PC; job and e-mail data is never uploaded to GitHub.</p></div>
+    <div class="actions"><button class="btn" id="help-close">Close</button>${actionButton("open_modules", "Open modules folder", true)}</div>`;
+}
+
+function showTab(id) {
+  document.querySelectorAll("nav button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === id)));
+  document.querySelectorAll("main section").forEach((s) => (s.hidden = s.id !== id));
+}
+
+document.getElementById("help-open").addEventListener("click", () => {
+  if (latest) renderHelp(latest);
+  document.getElementById("help").showModal();
+});
+document.getElementById("help").addEventListener("click", (event) => {
+  if (event.target.id === "help-close" || event.target.id === "help") document.getElementById("help").close();
+});
+
+async function load() {
+  try {
+    const response = await fetch("/api/data", { cache: "no-store" });
+    const data = await response.json();
+    if (data.error) throw new Error(data.error);
+    latest = data;
+    renderOverview(data);
+    renderTodo(data);
+    renderLinkedin(data);
+    renderJobs(data);
+    renderEmail(data);
+    renderPromote(data);
+    renderSchedule(data);
+    renderReach(data);
+    renderGithub(data);
+    renderLearning(data);
+    renderLog(data);
+    document.getElementById("updated").textContent = "Updated " + new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  } catch (error) {
+    document.getElementById("updated").textContent = "Couldn't load data: " + error.message;
+  }
+}
+
+document.querySelectorAll("nav button").forEach((button) => {
+  button.addEventListener("click", () => showTab(button.dataset.tab));
+});
+
+load();
+setInterval(load, 60000);
+</script>
+</body>
+</html>

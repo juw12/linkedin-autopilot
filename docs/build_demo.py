@@ -1,0 +1,258 @@
+"""Build the public ReachPilot demo (GitHub Pages) from dashboard.html plus made-up data.
+
+Usage:  python docs/build_demo.py [path/to/dashboard.html]
+
+Writes docs/index.html and copies the app icons next to it. Every name, number and job
+below is invented for the demo; nothing is read from your state, logs or private modules.
+"""
+
+from __future__ import annotations
+
+import json
+import shutil
+import sys
+from datetime import date, timedelta
+from pathlib import Path
+
+DOCS = Path(__file__).resolve().parent
+ROOT = DOCS.parent
+TODAY = date(2026, 11, 7)
+
+
+def day(offset: int) -> str:
+    return (TODAY + timedelta(days=offset)).isoformat()
+
+
+def job(score, company, title, location, source, status="New", notes=""):
+    return {
+        "score": score,
+        "company": company,
+        "title": title,
+        "location": location,
+        "status": status,
+        "link": "#",
+        "notes": notes,
+        "my_notes": "",
+        "source": source,
+        "applied_on": "",
+    }
+
+
+TODAY_JOBS = [
+    job(96, "Northwind Robotics", "Mechanical Design Engineer", "Singapore", "greenhouse"),
+    job(93, "Contoso Audio", "Product Design Engineer", "Taipei, Taiwan", "lever"),
+    job(91, "Fabrikam Motion", "R&D Mechanical Engineer", "Penang, Malaysia", "workday"),
+    job(88, "Globex Hardware", "NPI Mechanical Engineer", "Shenzhen, China", "greenhouse",
+        status="Stopped", notes="NOT submitted: the site asked for an e-mailed verification code. Finish it in the apply session."),
+    job(86, "Initech Labs", "Enclosure Design Engineer", "Singapore", "lever"),
+    job(84, "Umbrella Medical", "Mechanical Engineer, Devices", "Penang, Malaysia", "workday"),
+    job(82, "Wayne Instruments", "Design for Manufacturing Engineer", "Taipei, Taiwan", "greenhouse"),
+]
+NEEDS_YOU = [entry for entry in TODAY_JOBS if entry["status"] == "Stopped"]
+
+EMAIL_RECENT = [
+    {"at": f"{TODAY} 09:12", "company": "Acme Precision", "title": "Mechanical Engineer", "region": "Singapore",
+     "source": "jobstreet", "url": "#", "to_domain": "@example.com"},
+    {"at": f"{TODAY} 08:40", "company": "Blue Harbor Systems", "title": "Product Engineer", "region": "Penang",
+     "source": "linkedin", "url": "#", "to_domain": "@example.org"},
+    {"at": f"{day(-1)} 17:05", "company": "Summit Moulding", "title": "Tooling Engineer", "region": "Johor",
+     "source": "jobstreet", "url": "#", "to_domain": "@example.net"},
+    {"at": f"{day(-1)} 11:22", "company": "Orbit Electronics", "title": "NPI Engineer", "region": "Bangkok",
+     "source": "jobstreet", "url": "#", "to_domain": "@example.com"},
+    {"at": f"{day(-2)} 15:48", "company": "Cedar Medtech", "title": "R&D Engineer", "region": "Singapore",
+     "source": "linkedin", "url": "#", "to_domain": "@example.org"},
+]
+EMAIL_LEADS = [
+    {"title": "Senior Mechanical Engineer", "company": "Lumen Optics", "region": "Singapore", "url": "#", "fit": 27, "salary": ""},
+    {"title": "Manufacturing Engineer", "company": "Delta Motion", "region": "Kuala Lumpur", "url": "#", "fit": 24, "salary": ""},
+    {"title": "Product Development Engineer", "company": "Quartz Devices", "region": "Hsinchu", "url": "#", "fit": 23, "salary": ""},
+]
+EMAIL_SERIES = [{"x": day(-13 + i), "y": y} for i, y in enumerate([0, 2, 5, 9, 14, 11, 8, 12, 16, 10, 13, 9, 12, 7])]
+
+
+def task(name, last, nxt):
+    return {"name": name, "installed": True, "state": "Ready", "last_run": last, "next_run": nxt, "last_result": "0", "ok": True}
+
+
+SCHEDULE = [
+    {"slot": f"{day(3)} 08:00", "weekday": "Tue", "images": [], "kind": "prepared", "repo": None, "angle": "launch",
+     "title": "pocket-cad", "hook": "A tiny parametric CAD sketcher that runs in the browser.",
+     "body": "Built a tiny parametric sketcher that runs in the browser: constraints, dimensions and a STEP export.\n\nTry it: <demo link>",
+     "comment": ""},
+    {"slot": f"{day(4)} 08:00", "weekday": "Wed", "images": [], "kind": "prepared", "repo": None, "angle": "deep dive",
+     "title": "lab-notes", "hook": "One feature, explained: searchable test logs.",
+     "body": "One feature from lab-notes: every test log becomes searchable the moment it lands in the folder.",
+     "comment": ""},
+    {"slot": f"{day(5)} 08:00", "weekday": "Thu", "images": [], "kind": "prepared", "repo": None, "angle": "behind the build",
+     "title": "weather-kit", "hook": "How the sensor enclosure went from three parts to one.",
+     "body": "Behind the build: how the weather-kit enclosure went from three printed parts to one.",
+     "comment": ""},
+]
+
+DEMO = {
+    "overview": {
+        "now": f"{TODAY} 09:45", "mode": "auto", "paused": False, "token_days_left": 41, "click_tracking": True,
+        "posts_this_week": 2, "max_per_week": 3, "posted_total": 18, "failed_total": 0, "prepared_left": 3,
+        "next_post": SCHEDULE[0], "last_tick": f"{TODAY} 09:30", "impressions": 4210, "engagements": 186,
+        "posts_with_linkedin_stats": 12, "slots": ["Tue 08:00", "Wed 08:00", "Thu 08:00"], "awaiting": 0, "inbox": "",
+    },
+    "hub": {
+        "jobs": {
+            "installed": True, "tracked": 214, "open": 214, "queue_total": 214, "today": TODAY_JOBS,
+            "applied_total": 9, "applied_week": 3, "applied": [], "follow_ups": [], "needs_you": NEEDS_YOU,
+            "status_counts": {"New": 204, "Applied": 9, "Stopped": 1},
+            "workday_companies": ["Fabrikam Motion", "Umbrella Medical"], "blocked_companies": [],
+            "last_run": f"{TODAY} 07:31", "last_summary": "12 new roles from 37 company boards",
+            "last_error": "", "fill_me": [], "tracker": "",
+        },
+        "email": {
+            "installed": True, "sent_total": 128, "sent_today": 6, "sent_week": 41, "series": EMAIL_SERIES,
+            "regions": [["Singapore", 44], ["Penang", 21], ["Kuala Lumpur", 18], ["Bangkok", 15], ["Johor", 12], ["Hsinchu", 9]],
+            "recent": EMAIL_RECENT, "leads_total": 3, "leads": EMAIL_LEADS, "relay_ok": True,
+            "followups_enabled": True, "followup_after_days": 7, "max_per_day": 40, "report_to": "",
+            "last_run": f"{TODAY} 09:12", "last_run_age_hours": 0.6, "bigtech_last_run": f"{TODAY} 08:00", "log_tail": [],
+        },
+        "promote": {
+            "installed": False,
+            "planned": [
+                "Find creators / communities that fit each project (UGC, newsletters, small YouTubers)",
+                "Write a short, personal pitch per contact from the project's real README facts",
+                "Send from your Gmail relay with daily caps and one polite follow-up",
+                "Track replies and which projects get picked up, next to LinkedIn reach",
+            ],
+            "folder": "",
+        },
+        "tasks": {
+            "linkedin": task("LinkedIn posts", "Sat 7 Nov · 09:30", "Sat 7 Nov · 10:00"),
+            "jobs": task("Job search", "Sat 7 Nov · 07:30", "Sat 7 Nov · 12:30"),
+            "email": task("Email applications", "Sat 7 Nov · 09:00", "Sat 7 Nov · 10:00"),
+            "bigtech": task("Big Tech watch", "Sat 7 Nov · 08:00", "Sat 7 Nov · 12:00"),
+        },
+        "todo": [
+            {"priority": 1, "module": "Jobs", "title": "1 application stopped and needs you",
+             "detail": "The site asked for an e-mailed verification code. ReachPilot never answers human checks; open the apply session and finish it.",
+             "action": "jobs_apply", "action_label": "Start apply session",
+             "links": [{"label": "Globex Hardware - NPI Mechanical Engineer", "url": "#"}]},
+            {"priority": 2, "module": "Jobs", "title": "7 jobs ready to apply today",
+             "detail": "Forms are pre-filled with your CV, cover letter and answers. You glance and press Submit.",
+             "action": "jobs_apply", "action_label": "Start apply session", "links": []},
+            {"priority": 3, "module": "Jobs", "title": "Workday sites need your own sign-in",
+             "detail": "Fabrikam Motion and Umbrella Medical use Workday accounts, so these are applied by hand.",
+             "action": None, "action_label": "", "links": []},
+            {"priority": 4, "module": "Email", "title": "3 good leads have no recruiter e-mail",
+             "detail": "They can only be applied to on the company site.",
+             "action": "email_open_leads", "action_label": "Open leads", "links": []},
+        ],
+        "help": [
+            {"module": "LinkedIn", "runs": "Every 30 minutes; posts Tue/Wed/Thu 08:00.",
+             "auto": "Picks a project, writes the post from real README facts, adds screenshots, posts through the official API, learns from clicks and stars.",
+             "you": "Renew the LinkedIn login every 60 days (you get a reminder here and a Windows notification)."},
+            {"module": "Jobs", "runs": "Searches company job boards at 07:30 and 12:30.",
+             "auto": "Finds roles that fit your CV, scores them, writes cover letters, keeps the tracker. The apply session fills each form for you.",
+             "you": "Open the apply session, glance at each form, press Submit and type an e-mailed code if a site asks. Sites with a human check never get submitted by the bot."},
+            {"module": "Email", "runs": "E-mail applications every hour; Big Tech watch every 4 hours.",
+             "auto": "Reads job ads, and when an ad lists a recruiter e-mail it sends your CV and a tailored letter from your sending Gmail; replies go to your personal inbox. One follow-up after 7 days if no reply.",
+             "you": "Read replies and answer the ones you like."},
+            {"module": "Promote", "runs": "Planned.",
+             "auto": "Will find creators and communities that fit each project and send a short personal pitch.",
+             "you": "Approve the first batch of pitches."},
+        ],
+    },
+    "schedule": SCHEDULE,
+    "history": [],
+    "github": {
+        "latest_day": day(-1),
+        "repos": [
+            {"repo": "pocket-cad", "stars": 24, "li_uniques": 31, "li_views": 58, "clicks_30d": 19, "last_posted": day(-6), "posts": 3},
+            {"repo": "lab-notes", "stars": 11, "li_uniques": 14, "li_views": 22, "clicks_30d": 8, "last_posted": day(-13), "posts": 2},
+            {"repo": "weather-kit", "stars": 7, "li_uniques": 9, "li_views": 15, "clicks_30d": 5, "last_posted": day(-20), "posts": 2},
+            {"repo": "gear-calc", "stars": 5, "li_uniques": 4, "li_views": 6, "clicks_30d": 2, "last_posted": None, "posts": 0},
+        ],
+        "stars_series": [{"x": day(-6 + i), "y": y} for i, y in enumerate([40, 41, 41, 43, 44, 46, 47])],
+        "visitors_series": [{"x": day(-6 + i), "y": y} for i, y in enumerate([3, 8, 5, 4, 11, 6, 9])],
+        "clicks_series": [{"x": day(-6 + i), "y": y} for i, y in enumerate([1, 5, 3, 2, 7, 4, 6])],
+        "clicks_30d_total": 34,
+    },
+    "learning": {"records": 0, "repo": [], "angle": []},
+    "log": [
+        f"{TODAY} 09:30:02,114 INFO Tick: next slot Tue 08:00 (pocket-cad, launch angle)",
+        f"{TODAY} 09:00:01,870 INFO GitHub: 4 public repos, no new releases",
+        f"{day(-1)} 08:00:04,532 INFO Posted lab-notes (deep dive) through the official API",
+    ],
+}
+
+ACTION_REPLIES = {
+    "jobs_apply": "Demo: on your PC this opens the apply session, which fills each form and waits for you to press Submit.",
+    "email_open_leads": "Demo: on your PC this opens the list of good jobs that have no recruiter e-mail.",
+}
+
+SHIM = """<script>
+/* ReachPilot public demo: serve made-up data instead of the local API. */
+(() => {
+  const DEMO = %s;
+  const REPLIES = %s;
+  const realFetch = window.fetch.bind(window);
+  const json = (body) => new Response(JSON.stringify(body), { headers: { "Content-Type": "application/json" } });
+  window.fetch = async (url, options = {}) => {
+    const path = String(url);
+    if (path.endsWith("/api/data")) return json(DEMO);
+    if (path.endsWith("/api/action")) {
+      let name = "";
+      try { name = JSON.parse(options.body || "{}").name || ""; } catch (error) { name = ""; }
+      return json({ message: REPLIES[name] || "Demo: on your PC this button runs that task right away." });
+    }
+    return realFetch(url, options);
+  };
+})();
+</script>
+"""
+
+BANNER = (
+    '<div role="note" style="background:#fff7d6;border-bottom:1px solid #e9d27a;color:#5b4a00;'
+    'font:14px/1.4 system-ui,sans-serif;padding:8px 16px;text-align:center">'
+    "Demo with made-up data. ReachPilot itself runs locally on Windows: "
+    '<a href="https://github.com/juw12/reachpilot" style="color:#5b4a00;font-weight:600">source on GitHub</a>'
+    "</div>"
+)
+
+ICONS = {"icon.svg": "icon.svg", "icon-192.png": "icon-192.png", "favicon.ico": "app.ico"}
+
+MANIFEST = {
+    "name": "ReachPilot (demo)",
+    "short_name": "ReachPilot",
+    "start_url": "./",
+    "display": "standalone",
+    "background_color": "#f4f3f0",
+    "theme_color": "#1667c4",
+    "icons": [
+        {"src": "icon.svg", "sizes": "any", "type": "image/svg+xml"},
+        {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    ],
+}
+
+
+def build(source: Path) -> Path:
+    page = source.read_text(encoding="utf-8")
+    page = page.replace("__RP_TOKEN__", "demo")
+    for absolute in ('href="/icon.svg"', 'href="/favicon.ico"', 'href="/icon-192.png"',
+                     'href="/manifest.webmanifest"', 'src="/icon.svg"'):
+        page = page.replace(absolute, absolute.replace('="/', '="'))
+    page = page.replace("<title>ReachPilot</title>", "<title>ReachPilot - demo</title>", 1)
+    shim = SHIM % (json.dumps(DEMO, ensure_ascii=False), json.dumps(ACTION_REPLIES))
+    page = page.replace("<head>", "<head>\n" + shim, 1)
+    body_start = page.index("<body")
+    body_tag_end = page.index(">", body_start) + 1
+    page = page[:body_tag_end] + "\n" + BANNER + page[body_tag_end:]
+
+    out = DOCS / "index.html"
+    out.write_text(page, encoding="utf-8")
+    for target, name in ICONS.items():
+        shutil.copyfile(ROOT / "icons" / name, DOCS / target)
+    (DOCS / "manifest.webmanifest").write_text(json.dumps(MANIFEST, indent=2), encoding="utf-8")
+    (DOCS / ".nojekyll").write_text("", encoding="utf-8")
+    return out
+
+
+if __name__ == "__main__":
+    source_path = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "dashboard.html"
+    print(build(source_path))
