@@ -30,10 +30,10 @@
   @media (max-width: 760px) {
     .bar { flex-wrap: wrap; gap: 4px 12px; padding: 8px 14px 0; }
     .brand { font-size: 15px; }
-    nav { order: 3; flex: 1 0 100%; overflow-x: auto; scrollbar-width: none; margin: 0 -14px; padding: 0 14px 6px; }
+    nav { order: 3; flex: 1 0 100%; flex-wrap: wrap; gap: 4px; padding: 0 0 6px; }
     nav::-webkit-scrollbar { display: none; }
-    nav { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); }
-    nav button { min-height: 40px; padding: 8px 11px; }
+    
+    nav button { min-height: 44px; padding: 8px 12px; }
     main { padding: 14px; }
     td a, .todo li a, details summary { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
   }
@@ -118,9 +118,7 @@
   .todo ul { margin: 8px 0 0; padding-left: 18px; }
   .todo li { margin: 2px 0; }
   .module { border-top: 4px solid var(--blue); }
-  .module.jobs { border-top-color: var(--green); }
-  .module.email { border-top-color: #7c3aed; }
-  .module.promote { border-top-color: #a9b3ba; }
+      .module.promote { border-top-color: #a9b3ba; }
   .module .big { font-size: 24px; font-weight: 700; }
   .module h3 { display: flex; justify-content: space-between; align-items: center; }
   .toast { position: fixed; right: 18px; bottom: 18px; z-index: 5; background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.25); max-width: 380px; }
@@ -136,6 +134,23 @@
   table.daily td.n, table.daily th.n { text-align: right; white-space: nowrap; }
   table.daily tr.group-start td { border-top: 1px solid rgba(127,127,127,.25); }
   table.daily td { vertical-align: middle; }
+  table.daily .repeat { display: none; }
+  @media (max-width: 600px) {
+    table.daily thead { display: none; }
+    .scroll table.daily { min-width: 0; }
+    table.daily, table.daily tbody, table.daily tr { display: block; width: 100%; }
+    table.daily tr { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; padding: 12px 0;
+      border-top: 1px solid var(--line); }
+    table.daily tr:first-child { border-top: 0; }
+    table.daily tr.group-start td { border-top: 0; }
+    table.daily td { display: block; padding: 0; border: 0; text-align: left; }
+    table.daily td.mod, table.daily td.what, table.daily td.sp { grid-column: 1 / -1; }
+    table.daily .repeat { display: inline; font-weight: 700; }
+    table.daily td.what { color: var(--muted); margin-bottom: 4px; }
+    table.daily td[data-label]::before { content: attr(data-label) " "; color: var(--muted); font-weight: 400; }
+    table.daily td.n, table.daily td.hint { white-space: normal; text-align: left; }
+    table.daily td.sp { margin-top: 6px; }
+  }
   table.daily a.goto { cursor: pointer; color: var(--ink); }
 </style>
 </head>
@@ -229,11 +244,12 @@ function spark(series) {
     const h = p.y ? Math.max(2, (p.y * (H - 2)) / max) : 1;
     return `<rect x="${(i * step + 1).toFixed(1)}" y="${(H - h).toFixed(1)}" width="${(step - 2).toFixed(1)}" height="${h.toFixed(1)}" class="${p.y ? "on" : "off"}"><title>${esc(p.x)}: ${num(p.y)}</title></rect>`;
   }).join("");
-  return `<svg class="spark" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img">${bars}</svg>`;
+  const label = `Last ${series.length} days: ${series.map((p) => num(p.y)).join(", ")}`;
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(label)}">${bars}</svg>`;
 }
 
 function dailyTable(rows) {
-  if (!rows || !rows.length) return `<div class="empty">No numbers yet.</div>`;
+  if (!rows || !rows.length) return `<div class="empty">No numbers yet. Each automation adds a row after its first run.</div>`;
   let lastModule = "";
   const body = rows.map((r) => {
     const first = r.module !== lastModule;
@@ -241,13 +257,13 @@ function dailyTable(rows) {
     const avgNote = r.avg_days && r.avg_days < 7 ? ` <span class="hint">(${r.avg_days} d)</span>` : "";
     const atLimit = r.limit && r.today >= r.limit ? ` <span class="badge warn">at limit</span>` : "";
     return `<tr${first ? ' class="group-start"' : ""}>
-      <td>${first ? `<a class="goto" data-goto="${esc(r.tab)}"><b>${esc(r.module)}</b></a>` : ""}</td>
-      <td title="${esc(r.note || "")}">${esc(r.label)}</td>
-      <td class="n"><b>${num(r.today)}</b>${atLimit}</td>
-      <td class="n">${num(r.avg7)}${avgNote}</td>
-      <td class="n">${num(r.best)}</td>
-      <td class="hint">${esc(r.limit_label || "")}</td>
-      <td>${spark(r.series)}</td>
+      <td class="mod">${first ? `<a class="goto" data-goto="${esc(r.tab)}"><b>${esc(r.module)}</b></a>` : `<span class="repeat">${esc(r.module)}</span>`}</td>
+      <td class="what" title="${esc(r.note || "")}">${esc(r.label)}</td>
+      <td class="n" data-label="Today"><b>${num(r.today)}</b>${atLimit}</td>
+      <td class="n" data-label="Avg / day">${num(r.avg7)}${avgNote}</td>
+      <td class="n" data-label="Best day">${num(r.best)}</td>
+      <td class="hint" data-label="Daily limit">${esc(r.limit_label || "")}</td>
+      <td class="sp">${spark(r.series)}</td>
     </tr>`;
   }).join("");
   return `<div class="scroll"><table class="daily">

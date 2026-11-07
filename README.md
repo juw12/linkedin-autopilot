@@ -67,6 +67,7 @@ the [GitHub CLI](https://cli.github.com/) and a free LinkedIn developer app.
 ```powershell
 git clone https://github.com/juw12/reachpilot; cd reachpilot
 pip install -r requirements.txt
+notepad config.json                  # your GitHub user, time zone, posting slots, weekly cap, excluded repos
 gh auth login                        # GitHub CLI: repos, READMEs and traffic
 python autopilot.py init             # baseline your repos (+ optional seed_queue.json of hand-written posts)
 python autopilot.py auth             # LinkedIn app with "Share on LinkedIn" + "Sign In with LinkedIn (OpenID)",
@@ -77,8 +78,32 @@ python autopilot.py install          # scheduled task \ReachPilot\LinkedIn posts
 python selfupdate.py install         # optional: task \ReachPilot\Updates keeps the code current (fast-forward only)
 ```
 
-Then edit `config.json`: your GitHub user, time zone, posting slots, weekly cap and excluded repos.
-`"mode": "auto"` posts by itself; set `"mode": "review"` to hold each draft until you run `approve`.
+In `config.json`, `"mode": "auto"` posts by itself; set `"mode": "review"` to hold each draft until you run `approve`.
+
+### Create the LinkedIn app (once, about 5 minutes)
+
+ReachPilot posts as you through your own free LinkedIn developer app; nobody else's server is involved.
+
+1. Open [linkedin.com/developers/apps](https://www.linkedin.com/developers/apps) and press **Create app**. LinkedIn requires
+   every app to be linked to a LinkedIn Page, so pick (or create) a Page you manage, then add an app name and logo.
+2. On the **Products** tab, add **Share on LinkedIn** and **Sign In with LinkedIn using OpenID Connect**. Both are self-serve.
+3. On the **Auth** tab, under *Authorized redirect URLs*, add `http://localhost:8765/callback` exactly.
+4. Keep the Auth tab open: `python autopilot.py auth` asks for the **Client ID** and **Primary Client Secret** shown there,
+   saves them to `secrets.json` (git-ignored), and opens LinkedIn so you can approve the scopes `openid profile w_member_social`.
+
+The access token lasts 60 days and self-serve apps get no refresh token, so you sign in again every two months;
+the dashboard and a Windows notification remind you a week before.
+
+### What talks to what
+
+| Service | Why | What is sent |
+|---|---|---|
+| GitHub | find repos, READMEs, commits, traffic | read-only requests through `gh` (public API as fallback) |
+| LinkedIn | publish and measure posts | the post text, images and the first comment with links |
+| GoatCounter (optional) | count "Try it" clicks | a page view when someone opens a tracked go-link |
+| Ollama (optional, local) | rephrase a post | nothing leaves your PC |
+
+There is no ReachPilot server and no telemetry.
 
 ## Everyday use
 

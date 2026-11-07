@@ -89,6 +89,42 @@ SCHEDULE = [
      "comment": ""},
 ]
 
+
+def daily_row(module, tab, label, by_day, limit=None, limit_label="", note=""):
+    """Same shape as hub._daily_row, but anchored on the demo's fixed TODAY."""
+    last14 = [day(offset) for offset in range(-13, 1)]
+    window = [day(offset) for offset in range(-6, 1)]
+    return {
+        "module": module,
+        "tab": tab,
+        "label": label,
+        "today": by_day.get(day(0), 0),
+        "avg7": round(sum(by_day.get(d, 0) for d in window) / 7, 1),
+        "avg_days": 7,
+        "best": max(by_day.values()) if by_day else 0,
+        "total": sum(by_day.values()),
+        "limit": limit,
+        "limit_label": limit_label or (f"{limit} a day" if limit else "no limit"),
+        "series": [{"x": d, "y": by_day.get(d, 0)} for d in last14],
+        "note": note,
+    }
+
+
+EMAIL_BY_DAY = {point["x"]: point["y"] for point in EMAIL_SERIES}
+JOBS_FOUND_BY_DAY = {day(-13 + i): n for i, n in enumerate([9, 14, 6, 0, 0, 11, 8, 13, 10, 7, 0, 0, 15, 12])}
+JOBS_APPLIED_BY_DAY = {day(-6): 1, day(-2): 1, day(-1): 2}
+POSTS_BY_DAY = {day(-11): 1, day(-10): 1, day(-9): 1, day(-4): 1, day(-3): 1}
+DAILY = [
+    daily_row("E-mail applications", "email", "Applications e-mailed", EMAIL_BY_DAY, 40, "",
+              "Only ads that list a recruiter e-mail and pass the fit and salary rules."),
+    daily_row("Job search", "jobs", "Matching jobs found", JOBS_FOUND_BY_DAY, None, "",
+              "New roles on the company job boards that fit your CV."),
+    daily_row("Job search", "jobs", "Applications submitted", JOBS_APPLIED_BY_DAY, 20, "goal 20 a day",
+              "Needs you: the apply session fills the form, you press Submit."),
+    daily_row("LinkedIn posts", "linkedin", "Posts published", POSTS_BY_DAY, None, "3 a week (Tue/Wed/Thu)",
+              "Posting days are fixed, so most days show 0."),
+]
+
 DEMO = {
     "overview": {
         "now": f"{TODAY} 09:45", "mode": "auto", "paused": False, "token_days_left": 41, "click_tracking": True,
@@ -106,7 +142,7 @@ DEMO = {
             "last_error": "", "fill_me": [], "tracker": "",
         },
         "email": {
-            "installed": True, "sent_total": 128, "sent_today": 6, "sent_week": 41, "series": EMAIL_SERIES,
+            "installed": True, "sent_total": 128, "sent_today": EMAIL_BY_DAY[day(0)], "sent_week": sum(EMAIL_BY_DAY.get(day(o), 0) for o in range(-6, 1)), "series": EMAIL_SERIES,
             "regions": [["Singapore", 44], ["Penang", 21], ["Kuala Lumpur", 18], ["Bangkok", 15], ["Johor", 12], ["Hsinchu", 9]],
             "recent": EMAIL_RECENT, "leads_total": 3, "leads": EMAIL_LEADS, "relay_ok": True,
             "followups_enabled": True, "followup_after_days": 7, "max_per_day": 40, "report_to": "",
@@ -122,6 +158,7 @@ DEMO = {
             ],
             "folder": "",
         },
+        "daily": DAILY,
         "tasks": {
             "linkedin": task("LinkedIn posts", "Sat 7 Nov · 09:30", "Sat 7 Nov · 10:00"),
             "jobs": task("Job search", "Sat 7 Nov · 07:30", "Sat 7 Nov · 12:30"),
