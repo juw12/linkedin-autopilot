@@ -1,4 +1,4 @@
-"""Read public project facts from GitHub through the already-authenticated gh CLI.
+﻿"""Read public project facts from GitHub through the already-authenticated gh CLI.
 
 Everything a post says about a project comes from here (description, README
 tagline and bullets, topics, releases, commit messages), so posts stay factual.
@@ -8,11 +8,12 @@ from __future__ import annotations
 import json
 import re
 import subprocess
+from pathlib import Path
 from dataclasses import dataclass, field
 
 CREATE_NO_WINDOW = 0x08000000
 
-# UTF-8 text that was mis-decoded as Windows-1252 and saved again ("â‰¤" instead of "≤").
+# UTF-8 text that was mis-decoded as Windows-1252 and saved again ("Ã¢â€°Â¤" instead of "â‰¤").
 MOJIBAKE = re.compile(r"[\u00c2-\u00f4][\u0080-\u00bf\u0152\u0153\u0160\u0161\u0178\u017d\u017e\u0192\u02c6\u02dc\u2013-\u203a\u20ac\u2122]{1,3}")
 
 
@@ -32,7 +33,13 @@ TRIVIAL_COMMIT = re.compile(
 )
 
 
+_GH_BROKEN = False  # set after gh fails once, so a run doesn't wait on it for every call
+
+
 def gh_api(path: str, raw: bool = False):
+    global _GH_BROKEN
+    if _GH_BROKEN:
+        return public_api(path, raw)
     args = ["gh", "api", path]
     if raw:
         args += ["-H", "Accept: application/vnd.github.raw"]
@@ -44,12 +51,56 @@ def gh_api(path: str, raw: bool = False):
             creationflags=CREATE_NO_WINDOW,
         )
     except (OSError, subprocess.TimeoutExpired):
-        return None
+        _GH_BROKEN = True
+        return public_api(path, raw)
     if result.returncode != 0:
-        return None
+        # gh missing or its login expired: public data is still readable without a login.
+        stderr = result.stderr.decode("utf-8", "replace").lower()
+        if "404" not in stderr and "not found" not in stderr:  # login expired, proxy down, ...
+            _GH_BROKEN = True
+        return public_api(path, raw)
     if raw:
         return result.stdout
     return json.loads(result.stdout.decode("utf-8"))
+
+
+PUBLIC_CACHE = Path(__file__).resolve().parent / "data" / "github_public_cache"
+PUBLIC_CACHE_HOURS = 6  # anonymous GitHub API allows 60 requests/hour, so answers are reused
+
+
+def public_api(path: str, raw: bool = False):
+    """Same as gh_api for public endpoints, via the anonymous REST API with a 6-hour disk cache.
+
+    Endpoints that need a login (e.g. traffic) return None, exactly like a failed gh call.
+    """
+    import hashlib
+    import time
+    import urllib.error
+    import urllib.request
+
+    key = hashlib.sha1(f"{path}|{raw}".encode("utf-8")).hexdigest()
+    cache_file = PUBLIC_CACHE / key
+    if cache_file.exists() and time.time() - cache_file.stat().st_mtime < PUBLIC_CACHE_HOURS * 3600:
+        body = cache_file.read_bytes()
+    else:
+        accept = "application/vnd.github.raw" if raw else "application/vnd.github+json"
+        request = urllib.request.Request(
+            "https://api.github.com/" + path.lstrip("/"),
+            headers={"Accept": accept, "User-Agent": "reachpilot"},
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                body = response.read()
+        except (urllib.error.URLError, OSError, ValueError):
+            return None
+        PUBLIC_CACHE.mkdir(parents=True, exist_ok=True)
+        cache_file.write_bytes(body)
+    if raw:
+        return body
+    try:
+        return json.loads(body.decode("utf-8"))
+    except ValueError:
+        return None
 
 
 @dataclass

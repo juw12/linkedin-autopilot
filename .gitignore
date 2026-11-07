@@ -23,3 +23,4 @@ dashboard.ico
 
 # Private ReachPilot modules (job search, e-mail applications, digest): personal data, never commit
 modules/
+data/github_public_cache/

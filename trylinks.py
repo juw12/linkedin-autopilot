@@ -87,9 +87,26 @@ def render_page(name: str, target: str, code: str) -> str:
     )
 
 
+def _git_exe() -> str:
+    """Task Scheduler runs without Git on PATH, so look in the usual install folders too."""
+    import os
+    import shutil
+
+    candidates = [
+        shutil.which("git"),
+        os.path.expandvars(r"%LOCALAPPDATA%\Programs\Git\cmd\git.exe"),
+        os.path.expandvars(r"%ProgramFiles%\Git\cmd\git.exe"),
+        os.path.expandvars(r"%ProgramFiles(x86)%\Git\cmd\git.exe"),
+    ]
+    for candidate in candidates:
+        if candidate and os.path.isfile(candidate):
+            return candidate
+    return "git"
+
+
 def _git(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
     return subprocess.run(
-        ["git", *args],
+        [_git_exe(), *args],
         cwd=cwd,
         capture_output=True,
         text=True,
