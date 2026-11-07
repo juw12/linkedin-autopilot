@@ -34,6 +34,7 @@ TASKS = {
     "email": "Email applications",
     "bigtech": "Big Tech watch",
     "promote": "Promotion",
+    "updates": "Updates",
 }
 PYTHONW = Path(sys.executable).with_name("pythonw.exe")
 PYTHON = Path(sys.executable).with_name("python.exe")

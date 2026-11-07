@@ -25,6 +25,7 @@ from urllib.parse import parse_qs, quote, urlparse
 
 import analytics
 import hub
+import selfupdate
 import autopilot as ap
 import trylinks
 
@@ -488,41 +489,12 @@ def restart_process() -> None:
     )
 
 
-def git(*args: str, cwd: Path = CODE_DIR, timeout: int = 60) -> subprocess.CompletedProcess:
-    return subprocess.run(
-        ["git", *args], cwd=cwd, capture_output=True, text=True, timeout=timeout,
-        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-    )
-
-
-def pull_latest_version(folder: Path = CODE_DIR) -> str:
-    """Fast-forward to the newest version on GitHub when that is safe: on main, no local edits, nothing unpushed.
-    Returns what happened; never merges, rebases or touches local changes."""
-    try:
-        if git("rev-parse", "--abbrev-ref", "HEAD", cwd=folder).stdout.strip() != "main":
-            return "skipped: not on main"
-        if git("status", "--porcelain", "--untracked-files=no", cwd=folder).stdout.strip():
-            return "skipped: local edits in progress"
-        if git("fetch", "-q", "origin", "main", cwd=folder).returncode != 0:
-            return "skipped: GitHub not reachable"
-        behind = int(git("rev-list", "--count", "HEAD..origin/main", cwd=folder).stdout.strip() or 0)
-        ahead = int(git("rev-list", "--count", "origin/main..HEAD", cwd=folder).stdout.strip() or 0)
-        if behind == 0:
-            return "up to date"
-        if ahead:
-            return "skipped: local commits not pushed yet"
-        if git("merge", "--ff-only", "-q", "origin/main", cwd=folder).returncode != 0:
-            return "skipped: could not fast-forward"
-        return f"updated: {behind} new change(s)"
-    except Exception as error:
-        return f"skipped: {error}"
-
 
 def update_from_github() -> None:
     """Keep the app on the newest version; watch_code() then restarts it and the page reloads."""
     time.sleep(60)
     while True:
-        pull_latest_version()
+        selfupdate.log(selfupdate.pull_latest_version())
         time.sleep(UPDATE_CHECK_SECONDS)
 
 
