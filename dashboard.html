@@ -32,8 +32,10 @@
     .brand { font-size: 15px; }
     nav { order: 3; flex: 1 0 100%; overflow-x: auto; scrollbar-width: none; margin: 0 -14px; padding: 0 14px 6px; }
     nav::-webkit-scrollbar { display: none; }
+    nav { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); }
     nav button { min-height: 40px; padding: 8px 11px; }
     main { padding: 14px; }
+    td a, .todo li a, details summary { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
   }
   main { max-width: 1180px; margin: 0 auto; padding: 20px; }
   section[hidden] { display: none; }
@@ -43,6 +45,7 @@
   .card { background: var(--card); border-radius: 10px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
   .kpi .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
   .kpi .value { font-size: 26px; font-weight: 700; margin-top: 2px; }
+  .kpi .value.long { font-size: 19px; line-height: 1.3; margin-top: 6px; }
   .kpi .note { color: var(--muted); font-size: 12px; }
   .wide { grid-column: 1 / -1; }
   .two { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); margin-bottom: 18px; }
@@ -54,6 +57,7 @@
   .badge.warn { background: var(--amber-soft); color: var(--amber); }
   .badge.bad { background: var(--red-soft); color: var(--red); }
   .badge.grey { background: #eef0f2; color: var(--muted); }
+  .note-badge { display: block; width: fit-content; max-width: 100%; white-space: normal; margin-top: 4px; line-height: 1.45; padding: 3px 9px; border-radius: 8px; }
   .post { background: var(--card); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,.08); border-left: 5px solid var(--blue); }
   .post.auto, .post.cap { border-left-color: #a9b3ba; background: #fafafa; }
   .post.event { border-left-color: var(--green); }
@@ -67,9 +71,16 @@
   details summary { cursor: pointer; color: var(--blue); font-weight: 600; margin-top: 8px; }
   pre.text { white-space: pre-wrap; font: inherit; background: #f8f9fa; padding: 12px; border-radius: 6px; margin: 8px 0 0; }
   table { width: 100%; border-collapse: collapse; }
-  .scroll { overflow-x: auto; }
+  .scroll { overflow-x: auto;
+    background:
+      linear-gradient(to right, var(--card) 30%, rgba(255,255,255,0)) left / 32px 100% no-repeat local,
+      linear-gradient(to left, var(--card) 30%, rgba(255,255,255,0)) right / 32px 100% no-repeat local,
+      radial-gradient(farthest-side at 0 50%, rgba(0,0,0,.16), transparent) left / 12px 100% no-repeat scroll,
+      radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,.16), transparent) right / 12px 100% no-repeat scroll; }
+  .scroll:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
   .scroll table { min-width: 720px; }
   .scroll td:first-child { white-space: nowrap; }
+  .scroll td b { white-space: nowrap; }
   th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
   th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; }
   td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
@@ -82,7 +93,7 @@
   svg.chart .axis { stroke: var(--line); }
   svg.chart .line { fill: none; stroke: var(--blue); stroke-width: 2.5; }
   svg.chart .dot { fill: var(--blue); }
-  svg.chart text { fill: var(--muted); font-size: 11px; }
+  svg.chart text { fill: var(--muted); font-size: 12px; }
   .rank { display: grid; grid-template-columns: 150px 1fr 60px; gap: 8px; align-items: center; padding: 4px 0; }
   .rank .track { background: #eef0f2; border-radius: 4px; height: 12px; overflow: hidden; }
   .rank .fill { background: var(--blue); height: 100%; }
@@ -99,7 +110,7 @@
   .btn:disabled { opacity: .55; cursor: default; }
   .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
   .help-btn { border: 1px solid var(--line); background: var(--card); width: 32px; height: 32px; border-radius: 50%; font: 700 15px "Segoe UI", sans-serif; color: var(--blue); cursor: pointer; flex: none; }
-  .tab-count { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; border-radius: 9px; background: var(--red); color: #fff; font-size: 11px; line-height: 18px; text-align: center; font-weight: 700; }
+  .tab-count { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; border-radius: 9px; background: var(--red); color: #fff; font-size: 12px; line-height: 18px; text-align: center; font-weight: 700; }
   .todo { background: var(--card); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,.08); border-left: 5px solid var(--amber); }
   .todo.p1 { border-left-color: var(--red); }
   .todo.p3 { border-left-color: #a9b3ba; }
@@ -198,7 +209,8 @@ function lineChart(series, emptyText) {
   const points = series.map((p, i) => `${x(i)},${y(p.y)}`).join(" ");
   const dots = series.map((p, i) => `<circle class="dot" cx="${x(i)}" cy="${y(p.y)}" r="3.5"><title>${esc(p.x)}: ${num(p.y)}</title></circle>`).join("");
   const first = series[0].x, last = series[series.length - 1].x;
-  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img">
+  const summary = `Line chart from ${niceDate(first)} to ${niceDate(last)}, highest value ${num(max)}`;
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(summary)}">
     <line class="axis" x1="${L}" y1="${H - B}" x2="${W - R}" y2="${H - B}"/>
     <line class="axis" x1="${L}" y1="${T}" x2="${W - R}" y2="${T}" stroke-dasharray="3 4"/>
     <text x="${L - 6}" y="${T + 4}" text-anchor="end">${num(max)}</text>
@@ -244,7 +256,9 @@ function dailyTable(rows) {
 }
 
 function kpi(label, value, note = "") {
-  return `<div class="card kpi"><div class="label">${esc(label)}</div><div class="value">${value}</div><div class="note">${note}</div></div>`;
+  const plain = String(value).replace(/<[^>]*>/g, "");
+  const size = plain.length > 9 ? " long" : "";
+  return `<div class="card kpi"><div class="label">${esc(label)}</div><div class="value${size}">${value}</div><div class="note">${note}</div></div>`;
 }
 
 function postCard(entry, index) {
@@ -326,7 +340,7 @@ function renderReach(d) {
     </div>
     <div class="card" style="margin-bottom:18px">
       <h3>Every post</h3>
-      ${d.history.length ? `<div class="scroll"><table>
+      ${d.history.length ? `<div class="scroll" tabindex="0" role="region" aria-label="Scrollable table"><table>
         <thead><tr><th>Slot</th><th>Post</th><th>Status</th><th class="num">Impressions</th><th class="num">Engagements</th><th class="num">GitHub visitors</th><th class="num">Stars</th><th class="num">Try-it clicks</th><th></th></tr></thead>
         <tbody>${rows}</tbody></table></div>` : `<div class="empty">Nothing posted yet. The first post goes out ${esc(o.next_post ? niceDate(o.next_post.slot) : "soon")} WIB.</div>`}
     </div>
@@ -334,7 +348,7 @@ function renderReach(d) {
       <h3>Where reach numbers come from</h3>
       <p class="hint">LinkedIn doesn't let apps read impressions for personal profiles, so GitHub visitors, stars and “Try it” clicks are measured automatically.
       To add LinkedIn's own impressions and engagements: open your LinkedIn post analytics, export to Excel, and save the file in
-      <code>${esc(o.inbox)}</code>. The bot imports it within 30 minutes, and its numbers then take priority over the GitHub-based score.</p>
+      ${o.inbox ? `<code>${esc(o.inbox)}</code>` : "the LinkedIn inbox folder"}. The bot imports it within 30 minutes, and its numbers then take priority over the GitHub-based score.</p>
     </div>`;
 }
 
@@ -358,7 +372,7 @@ function renderGithub(d) {
     </div>
     <div class="card">
       <h3>Projects ${g.latest_day ? `<span class="hint">· snapshot ${esc(niceDate(g.latest_day))}</span>` : ""}</h3>
-      ${g.repos.length ? `<div class="scroll"><table>
+      ${g.repos.length ? `<div class="scroll" tabindex="0" role="region" aria-label="Scrollable table"><table>
         <thead><tr><th>Project</th><th class="num">Stars</th><th class="num">LinkedIn visitors</th><th class="num">LinkedIn views</th><th class="num">Try-it clicks (30d)</th><th class="num">Posts</th><th>Last posted</th></tr></thead>
         <tbody>${rows}</tbody></table></div>` : `<div class="empty">No GitHub data yet.</div>`}
       <p class="hint">LinkedIn visitors and views are GitHub's referrer counts over the last 14 days. Clicks come from the tracked “Try it” links.</p>
@@ -519,7 +533,7 @@ function renderJobs(d) {
   }
   const row = (job) => `<tr>
       <td class="num">${num(job.score)}</td>
-      <td><b>${esc(job.company)}</b><div class="hint">${esc(job.title)}</div>${job.my_notes ? `<div class="badge warn">${esc(job.my_notes.slice(0, 90))}</div>` : ""}</td>
+      <td><b>${esc(job.company)}</b><div class="hint">${esc(job.title)}</div>${job.my_notes ? `<div class="badge warn note-badge">${esc(job.my_notes)}</div>` : ""}</td>
       <td>${esc(job.location || "")}</td>
       <td><span class="badge grey">${esc(job.source)}</span></td>
       <td>${link(job.link, "Open")}</td></tr>`;
@@ -537,14 +551,14 @@ function renderJobs(d) {
       <p class="hint">The apply session opens each job, fills the form (CV, cover letter, visa, salary, notice period) and waits for you to press Submit. It marks the job Applied when the site confirms.</p>
       <div class="actions">${actionButton("jobs_apply", "Start apply session")}${actionButton("jobs_search_now", "Search for new jobs now", true)}${actionButton("jobs_open_tracker", "Open tracker (Excel)", true)}${actionButton("open_answers", "Edit my answers", true)}</div>
     </div>
-    ${j.needs_you.length ? `<div class="card" style="margin-bottom:18px"><h3>Stopped and waiting for you</h3><div class="scroll"><table>
+    ${j.needs_you.length ? `<div class="card" style="margin-bottom:18px"><h3>Stopped and waiting for you</h3><div class="scroll" tabindex="0" role="region" aria-label="Scrollable table"><table>
       <thead><tr><th class="num">Score</th><th>Job</th><th>Location</th><th>Site</th><th></th></tr></thead><tbody>${j.needs_you.map(row).join("")}</tbody></table></div></div>` : ""}
     <div class="card" style="margin-bottom:18px"><h3>Today's list</h3>
-      ${j.today.length ? `<div class="scroll"><table><thead><tr><th class="num">Score</th><th>Job</th><th>Location</th><th>Site</th><th></th></tr></thead>
+      ${j.today.length ? `<div class="scroll" tabindex="0" role="region" aria-label="Scrollable table"><table><thead><tr><th class="num">Score</th><th>Job</th><th>Location</th><th>Site</th><th></th></tr></thead>
       <tbody>${j.today.map(row).join("")}</tbody></table></div>` : `<div class="empty">Nothing queued.</div>`}</div>
     <div class="card"><h3>Applied</h3>
-      ${j.applied.length ? `<div class="scroll"><table><thead><tr><th>Applied</th><th>Job</th><th>Status</th><th></th></tr></thead><tbody>
-      ${j.applied.map((job) => `<tr><td>${esc(job.applied_on)}</td><td><b>${esc(job.company)}</b><div class="hint">${esc(job.title)}</div></td><td><span class="badge good">${esc(job.status)}</span></td><td>${link(job.link, "Open")}</td></tr>`).join("")}
+      ${j.applied.length ? `<div class="scroll" tabindex="0" role="region" aria-label="Scrollable table"><table><thead><tr><th>Applied</th><th>Job</th><th>Status</th><th></th></tr></thead><tbody>
+      ${j.applied.map((job) => `<tr><td>${esc(job.applied_on)}</td><td><b>${esc(job.company)}</b><div class="hint">${esc(job.title)}</div></td><td><span class="badge good">${esc(job.status)}</span></td><td>${job.link ? link(job.link, "Open") : ""}</td></tr>`).join("")}
       </tbody></table></div>` : `<div class="empty">No applications yet. Start an apply session to send the first ones.</div>`}</div>`;
 }
 
@@ -574,12 +588,12 @@ function renderEmail(d) {
       <p class="hint">Sends from ${esc(e.report_to || "your Gmail")} with your CV; replies go to your personal inbox. ${e.followups_enabled ? `One follow-up after ${esc(e.followup_after_days)} days if nobody replied.` : "Follow-ups are off."}</p>
       <div class="actions">${actionButton("email_run_now", "Run now")}${actionButton("email_preview", "Preview next e-mails (sends nothing)", true)}${actionButton("email_open_leads", "Open site-only leads", true)}</div>
     </div>
-    <div class="card" style="margin-bottom:18px"><h3>Recently sent</h3><div class="scroll"><table>
+    <div class="card" style="margin-bottom:18px"><h3>Recently sent</h3><div class="scroll" tabindex="0" role="region" aria-label="Scrollable table"><table>
       <thead><tr><th>Sent</th><th>Job</th><th>Region</th><th>Recruiter</th><th></th></tr></thead><tbody>
-      ${e.recent.map((r) => `<tr><td>${esc(niceDate(r.at))}</td><td><b>${esc(r.company)}</b><div class="hint">${esc(r.title)}</div></td><td>${esc(r.region)}</td><td class="hint">@${esc(r.to_domain)}</td><td>${link(r.url, "Ad")}</td></tr>`).join("")}
+      ${e.recent.map((r) => `<tr><td>${esc(niceDate(r.at))}</td><td><b>${esc(r.company)}</b><div class="hint">${esc(r.title)}</div></td><td>${esc(r.region)}</td><td class="hint">@${esc(r.to_domain)}</td><td>${link(r.url, "View ad")}</td></tr>`).join("")}
       </tbody></table></div></div>
     <div class="card"><h3>Best site-only leads</h3><p class="hint">Good fits whose ad has no e-mail address, so they need applying on the site.</p>
-      ${e.leads.length ? `<div class="scroll"><table><thead><tr><th class="num">Fit</th><th>Job</th><th>Region</th><th>Salary</th><th></th></tr></thead><tbody>
+      ${e.leads.length ? `<div class="scroll" tabindex="0" role="region" aria-label="Scrollable table"><table><thead><tr><th class="num">Fit</th><th>Job</th><th>Region</th><th>Salary</th><th></th></tr></thead><tbody>
       ${e.leads.map((l) => `<tr><td class="num">${num(l.fit)}</td><td><b>${esc(l.company)}</b><div class="hint">${esc(l.title)}</div></td><td>${esc(l.region)}</td><td class="hint">${esc(l.salary || "–")}</td><td>${link(l.url, "Open")}</td></tr>`).join("")}
       </tbody></table></div>` : `<div class="empty">None.</div>`}</div>`;
 }

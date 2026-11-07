@@ -94,12 +94,12 @@ DEMO = {
         "now": f"{TODAY} 09:45", "mode": "auto", "paused": False, "token_days_left": 41, "click_tracking": True,
         "posts_this_week": 2, "max_per_week": 3, "posted_total": 18, "failed_total": 0, "prepared_left": 3,
         "next_post": SCHEDULE[0], "last_tick": f"{TODAY} 09:30", "impressions": 4210, "engagements": 186,
-        "posts_with_linkedin_stats": 12, "slots": ["Tue 08:00", "Wed 08:00", "Thu 08:00"], "awaiting": 0, "inbox": "",
+        "posts_with_linkedin_stats": 12, "slots": ["Tue 08:00", "Wed 08:00", "Thu 08:00"], "awaiting": 0, "inbox": "C:\\ReachPilot\\linkedin_inbox",
     },
     "hub": {
         "jobs": {
             "installed": True, "tracked": 214, "open": 214, "queue_total": 214, "today": TODAY_JOBS,
-            "applied_total": 9, "applied_week": 3, "applied": [], "follow_ups": [], "needs_you": NEEDS_YOU,
+            "applied_total": 9, "applied_week": 3, "applied": [{"applied_on": day(-1), "company": "Tailspin Devices", "title": "Mechanical Engineer", "status": "Applied", "link": "#"}, {"applied_on": day(-1), "company": "Adatum Robotics", "title": "Product Design Engineer", "status": "Applied", "link": "#"}, {"applied_on": day(-2), "company": "Litware Audio", "title": "Enclosure Engineer", "status": "Applied", "link": "#"}, {"applied_on": day(-6), "company": "Proseware Medical", "title": "Mechanical Design Engineer", "status": "Applied", "link": "#"}], "follow_ups": [], "needs_you": NEEDS_YOU,
             "status_counts": {"New": 204, "Applied": 9, "Stopped": 1},
             "workday_companies": ["Fabrikam Motion", "Umbrella Medical"], "blocked_companies": [],
             "last_run": f"{TODAY} 07:31", "last_summary": "12 new roles from 37 company boards",
@@ -159,7 +159,18 @@ DEMO = {
         ],
     },
     "schedule": SCHEDULE,
-    "history": [],
+    "history": [
+        {"slot": f"{day(-2)} 08:00", "title": "weather-kit", "hook": "A $9 weather station that logs to a spreadsheet.",
+         "status": "posted", "impressions": 512, "engagements": 23, "visitors": 14, "stars": 3, "try_clicks": 6, "url": ""},
+        {"slot": f"{day(-3)} 08:00", "title": "gear-calc", "hook": "Spur gear sizing in one screen, no spreadsheet.",
+         "status": "posted", "impressions": 388, "engagements": 15, "visitors": 9, "stars": 1, "try_clicks": 4, "url": ""},
+        {"slot": f"{day(-8)} 08:00", "title": "lab-notes", "hook": "Every test log, searchable the moment it lands.",
+         "status": "posted", "impressions": 701, "engagements": 34, "visitors": 22, "stars": 5, "try_clicks": 0, "url": ""},
+        {"slot": f"{day(-9)} 08:00", "title": "pocket-cad", "hook": "A tiny parametric CAD sketcher in the browser.",
+         "status": "posted", "impressions": 934, "engagements": 47, "visitors": 31, "stars": 8, "try_clicks": 19, "url": ""},
+        {"slot": f"{day(-10)} 08:00", "title": "weather-kit", "hook": "What broke in month one of an outdoor sensor.",
+         "status": "skipped", "impressions": None, "engagements": None, "visitors": None, "stars": None, "try_clicks": None, "url": ""},
+    ],
     "github": {
         "latest_day": day(-1),
         "repos": [
@@ -211,7 +222,7 @@ BANNER = (
     '<div role="note" style="background:#fff7d6;border-bottom:1px solid #e9d27a;color:#5b4a00;'
     'font:14px/1.4 system-ui,sans-serif;padding:8px 16px;text-align:center">'
     "Demo with made-up data. ReachPilot itself runs locally on Windows: "
-    '<a href="https://github.com/juw12/reachpilot" style="color:#5b4a00;font-weight:600">source on GitHub</a>'
+    '<a href="https://github.com/juw12/reachpilot" style="color:#5b4a00;font-weight:600;display:inline-block;padding:13px 4px;margin:-13px 0">source on GitHub</a>'
     "</div>"
 )
 
