@@ -30,13 +30,16 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
 <style>
+  /* Design tokens: see design.md (editorial ledger: warm paper, serif headings, one blue accent) */
   :root {
-    --bg: #f3f2ef; --card: #fff; --ink: #1d2226; --muted: #5e6b75; --line: #e3e6e8;
-    --blue: #0a66c2; --blue-soft: #e8f3ff; --green: #057642; --green-soft: #e6f4ea;
+    --bg: #faf9f6; --card: #faf9f6; --ink: #1f1d1a; --muted: #5f5a52; --line: #e4e0d8;
+    --blue: #0a5aa8; --blue-soft: #eaf1f8; --green: #057642; --green-soft: #e6f4ea;
     --amber: #915907; --amber-soft: #fdf3e1; --red: #b42318; --red-soft: #fdecea;
+    --serif: Georgia, Cambria, "Times New Roman", ui-serif, serif;
+    --sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; font: 14px/1.5 "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--ink); }
+  body { margin: 0; font: 15px/1.6 var(--sans); background: var(--bg); color: var(--ink); }
   header.top { position: sticky; top: 0; z-index: 2; background: var(--card); border-bottom: 1px solid var(--line); }
   .bar { max-width: 1180px; margin: 0 auto; padding: 10px 20px; display: flex; align-items: center; gap: 18px; }
   .brand { margin: 0; font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
@@ -199,6 +202,34 @@
     table.daily td.what { color: var(--ink); font-weight: 600; }
   }
   table.daily a.goto { cursor: pointer; color: var(--ink); }
+
+  /* Editorial layer (design.md): rules instead of boxes, serif display type */
+  h1, h2, h3, h4, .kpi .value, .module .big, .next .title { font-family: var(--serif); font-weight: 700; letter-spacing: -.005em; }
+  header.top { background: var(--bg); border-bottom: 2px solid var(--ink); }
+  .brand { font-size: 19px; }
+  @media (min-width: 761px) {
+    nav button { border-radius: 0; }
+    nav button:hover { background: none; text-decoration: underline; text-underline-offset: 6px; }
+    nav button[aria-selected="true"] { background: none; color: var(--ink); text-decoration: underline 2px var(--blue); text-underline-offset: 8px; }
+  }
+  @media (max-width: 760px) {
+    nav button, .more { font-size: 14px; padding: 8px 9px; }
+    .bar { gap: 4px 10px; }
+  }
+  .card, .post, .todo, .runs li { box-shadow: none; border-radius: 0; background: transparent; }
+  .card { border-top: 1px solid var(--ink); padding: 14px 4px 10px; }
+  .grid { gap: 24px; }
+  .kpi .value { font-size: 34px; font-weight: 400; }
+  .kpi .label { letter-spacing: .07em; font-size: 12px; color: var(--muted); }
+  h2 { font-size: 26px; font-weight: 400; margin-bottom: 16px; }
+  .module { border-top: 1px solid var(--ink); }
+  .next { border-left: 0; border-top: 3px solid var(--blue); }
+  .post, .todo { border: 0; border-top: 1px solid var(--line); padding-left: 4px; }
+  .todo.p1 { border-top: 1px solid var(--line); box-shadow: inset 3px 0 0 var(--red); padding-left: 14px; }
+  .runs li { border: 1px solid var(--line); }
+  .btn { border-radius: 2px; }
+  .badge { border-radius: 2px; }
+  .empty { background: transparent; border: 1px dashed var(--line); }
 </style>
 </head>
 <body>
