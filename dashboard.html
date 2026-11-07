@@ -131,6 +131,12 @@
   dialog.help .mod { border-top: 1px solid var(--line); padding: 12px 0; }
   dialog.help dt { font-weight: 600; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .03em; margin-top: 6px; }
   dialog.help dd { margin: 0; }
+  .spark rect.on { fill: var(--blue); }
+  .spark rect.off { fill: currentColor; opacity: .15; }
+  table.daily td.n, table.daily th.n { text-align: right; white-space: nowrap; }
+  table.daily tr.group-start td { border-top: 1px solid rgba(127,127,127,.25); }
+  table.daily td { vertical-align: middle; }
+  table.daily a.goto { cursor: pointer; color: var(--ink); }
 </style>
 </head>
 <body>
@@ -213,6 +219,40 @@ function lineChart(series, emptyText) {
     <text x="${L}" y="${H - 6}">${esc(niceDate(first))}</text>
     ${series.length > 1 ? `<text x="${W - R}" y="${H - 6}" text-anchor="end">${esc(niceDate(last))}</text>` : ""}
   </svg>`;
+}
+
+function spark(series) {
+  if (!series || !series.length) return "";
+  const W = 120, H = 28, max = Math.max(1, ...series.map((p) => p.y));
+  const step = W / series.length;
+  const bars = series.map((p, i) => {
+    const h = p.y ? Math.max(2, (p.y * (H - 2)) / max) : 1;
+    return `<rect x="${(i * step + 1).toFixed(1)}" y="${(H - h).toFixed(1)}" width="${(step - 2).toFixed(1)}" height="${h.toFixed(1)}" class="${p.y ? "on" : "off"}"><title>${esc(p.x)}: ${num(p.y)}</title></rect>`;
+  }).join("");
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img">${bars}</svg>`;
+}
+
+function dailyTable(rows) {
+  if (!rows || !rows.length) return `<div class="empty">No numbers yet.</div>`;
+  let lastModule = "";
+  const body = rows.map((r) => {
+    const first = r.module !== lastModule;
+    lastModule = r.module;
+    const avgNote = r.avg_days && r.avg_days < 7 ? ` <span class="hint">(${r.avg_days} d)</span>` : "";
+    const atLimit = r.limit && r.today >= r.limit ? ` <span class="badge warn">at limit</span>` : "";
+    return `<tr${first ? ' class="group-start"' : ""}>
+      <td>${first ? `<a class="goto" data-goto="${esc(r.tab)}"><b>${esc(r.module)}</b></a>` : ""}</td>
+      <td title="${esc(r.note || "")}">${esc(r.label)}</td>
+      <td class="n"><b>${num(r.today)}</b>${atLimit}</td>
+      <td class="n">${num(r.avg7)}${avgNote}</td>
+      <td class="n">${num(r.best)}</td>
+      <td class="hint">${esc(r.limit_label || "")}</td>
+      <td>${spark(r.series)}</td>
+    </tr>`;
+  }).join("");
+  return `<div class="scroll"><table class="daily">
+    <thead><tr><th>Automation</th><th>Per day</th><th class="n">Today</th><th class="n">Avg / day</th><th class="n">Best day</th><th>Daily limit</th><th>Last 14 days</th></tr></thead>
+    <tbody>${body}</tbody></table></div>`;
 }
 
 function kpi(label, value, note = "") {
@@ -441,6 +481,10 @@ function renderOverview(d) {
       ${h.todo.slice(0, 3).map(todoCard).join("")}
       ${h.todo.length > 3 ? `<button class="btn ghost" data-goto="todo">See all ${h.todo.length}</button>` : ""}
     </div>` : `<div class="card" style="margin-bottom:18px"><h3>Nothing needs you right now</h3><p class="hint">Everything is running on its own.</p></div>`}
+    <div class="card" style="margin-bottom:18px">
+      <h3>Per day, every automation <span class="hint">· today, average of the last 7 days, best day and the daily limit</span></h3>
+      ${dailyTable(h.daily)}
+    </div>
     <div class="two">
       <div class="card module">
         <h3>LinkedIn posts <button class="btn ghost" data-goto="linkedin">Open</button></h3>
@@ -461,9 +505,10 @@ function renderOverview(d) {
           ${lineChart(email.series, "No e-mails yet.")}` : `<div class="hint">Not set up.</div>`}
       </div>
       <div class="card module promote">
-        <h3>Project promotion <span class="badge grey">Coming soon</span></h3>
-        <div class="hint">Promotion and UGC outreach e-mails for your projects will appear here, next to LinkedIn reach.</div>
-        <div class="actions"><button class="btn ghost" data-goto="promote">What's planned</button></div>
+        <h3>Creator outreach <button class="btn ghost" data-goto="promote">Open</button></h3>
+        ${h.promote.installed ? `<div class="big">${num(h.promote.sent_today)} / ${num(h.promote.cap)} sent today</div>
+          <div class="hint">${num(h.promote.contacted)} creators contacted · ${num(h.promote.replies)} replies · ${num(h.promote.awaiting_approval)} waiting for your Send</div>
+          ${lineChart(h.promote.series, "No e-mails yet.")}` : `<div class="hint">Not set up${h.promote.error ? `: ${esc(h.promote.error)}` : ""}.</div>`}
       </div>
     </div>`;
 }
@@ -555,13 +600,79 @@ function renderEmail(d) {
 
 function renderPromote(d) {
   const p = d.hub.promote;
-  document.getElementById("promote").innerHTML = `
-    <div class="card module promote">
-      <h3>Project promotion <span class="badge grey">${p.installed ? "Set up" : "Coming soon"}</span></h3>
-      <p class="hint">This tab is reserved for the promotion / UGC e-mail automation for your projects. When it's built it drops into <code>${esc(p.folder)}</code> and shows up here and in "What I need from you".</p>
-      <h3 style="margin-top:14px">Planned</h3>
-      <ul>${p.planned.map((step) => `<li>${esc(step)}</li>`).join("")}</ul>
+  const section = document.getElementById("promote");
+  if (!p.installed) {
+    section.innerHTML = `<div class="empty">Creator outreach isn't set up${p.error ? `: ${esc(p.error)}` : ""}.</div>`;
+    return;
+  }
+  const task = d.hub.tasks.promote || {};
+  const pct = (value) => (value === null || value === undefined ? "–" : Math.round(value * 100) + "%");
+  const subs = (c) => (c.platform === "youtube" ? `${num(c.subscribers || 0)} subs` : esc(c.platform || ""));
+  const statusBadge = (m) => ({ queued: `<span class="badge warn">waiting for you</span>`, approved: `<span class="badge good">approved</span>`,
+    held: `<span class="badge bad">held</span>`, failed: `<span class="badge bad">failed</span>` }[m.status] || "");
+  const mailCard = (m) => `
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div><b>${link(m.creator.url, m.creator.name)}</b> <span class="hint">· ${subs(m.creator)} · ${esc(m.creator.type || "")} · for <b>${esc(m.product)}</b> · ${esc(m.kind.replace("_", "-"))}</span> ${statusBadge(m)}
+          <div class="hint">To ${esc(m.to_email)} · e-mail found on ${link(m.creator.email_source, "their channel")} · their video: ${link(m.creator.recent_url, m.creator.recent_title || "–")}</div></div>
+        <div class="actions">
+          ${m.status === "queued" || m.status === "approved" ? actionButton(`promote:send:${m.id}`, "Send now") : actionButton(`promote:retry:${m.id}`, "Retry")}
+          ${m.status === "queued" ? actionButton(`promote:approve:${m.id}`, "Approve", true) : ""}
+          ${actionButton(`promote:skip:${m.id}`, "Skip", true)}
+          ${actionButton(`promote:mark:${m.creator.id}|suppressed`, "Never contact", true)}
+        </div>
+      </div>
+      ${m.error ? `<div class="badge bad" style="margin-top:8px;white-space:normal">${esc(m.error)}</div>` : ""}
+      <div style="margin-top:10px;font-weight:600">${esc(m.subject)} <span class="hint">· variant ${esc(m.variant)}</span></div>
+      <pre style="white-space:pre-wrap;font-family:inherit;font-size:13px;background:#f7f7f5;border-radius:8px;padding:12px;margin:8px 0 0">${esc(m.body)}</pre>
     </div>`;
+  const statRows = (rows, label) => rows.length
+    ? `<table><thead><tr><th>${label}</th><th class="num">E-mailed</th><th class="num">Replies</th><th class="num">Rate</th></tr></thead><tbody>
+       ${rows.map((r) => `<tr><td>${esc(r.key || r.variant)}</td><td class="num">${num(r.sent)}</td><td class="num">${num(r.replies)}</td><td class="num">${pct(r.rate)}</td></tr>`).join("")}</tbody></table>`
+    : `<div class="empty">Nothing sent yet.</div>`;
+  section.innerHTML = `
+    <div class="grid">
+      ${kpi("Sent today", `${num(p.sent_today)} / ${num(p.cap)}`, "Warm-up cap grows to 20 a day")}
+      ${kpi("Waiting for you", num(p.awaiting_approval), p.mode === "review" ? "Review mode: you press Send" : "Auto mode")}
+      ${kpi("Creators contacted", num(p.contacted), `${num(p.pool)} ready · ${num(p.no_email)} without public e-mail`)}
+      ${kpi("Replies", num(p.replies), `Reply rate ${pct(p.reply_rate)} · ${num(p.interested)} interested`)}
+      ${kpi("Mode", p.paused ? "Paused" : p.mode === "auto" ? "Auto" : "Review", `Sends ${p.send_window[0]}:00–${p.send_window[1]}:00`)}
+      ${kpi("Next run", esc(task.next_run || "–"), `Replies checked ${esc(p.last_reply_check ? niceDate(p.last_reply_check) : "–")}`)}
+    </div>
+    <div class="card" style="margin-bottom:18px">
+      <h3>Controls</h3>
+      <p class="hint">Sends from your Gmail relay with replies going to ${esc(p.reply_to)}. One e-mail per creator, one follow-up after 5 days, stops when they reply.
+        ${p.youtube_ok ? "" : " <b>Add a YouTube API key so it can find creators.</b>"}</p>
+      <div class="actions">
+        ${p.awaiting_approval ? actionButton("promote:approveall", `Approve all ${p.awaiting_approval}`) : ""}
+        ${p.mode === "review" ? actionButton("promote:mode:auto", "Switch to auto-send", true) : actionButton("promote:mode:review", "Switch to review (I press Send)", true)}
+        ${p.paused ? actionButton("promote:resume", "Resume") : actionButton("promote:pause", "Pause", true)}
+        ${actionButton("promote:discover", "Find creators now", true)}
+        ${actionButton("promote:inbox", "Check replies", true)}
+        ${actionButton("promote:plan", "Plan today", true)}
+        ${p.youtube_ok ? "" : actionButton("promote:setkey", "Add YouTube key")}
+        ${actionButton("promote:openproducts", "Edit products", true)}
+      </div>
+    </div>
+    ${p.open_replies.length ? `<div class="card" style="margin-bottom:18px"><h3>Replies to answer</h3>
+      ${p.open_replies.map((r) => `<div class="todo p1"><h4>${esc(r.creator.name)} · ${esc(r.product)}</h4><div class="hint">${esc(r.snippet)}</div>
+        <div class="actions">${link(r.gmail, "Open in Gmail")} ${actionButton(`promote:mark:${r.creator.id}|interested`, "Interested")}${actionButton(`promote:mark:${r.creator.id}|declined`, "Not a fit", true)}</div></div>`).join("")}</div>` : ""}
+    <h3>Today's e-mails</h3>
+    ${p.queue.length ? p.queue.map(mailCard).join("") : `<div class="empty" style="margin-bottom:18px">Queue is empty. It fills each morning from the creator pool${p.youtube_ok ? "" : " once a YouTube key is added"}.</div>`}
+    <div class="two">
+      <div class="card"><h3>E-mails sent per day</h3>${lineChart(p.series, "No e-mails yet.")}</div>
+      <div class="card"><h3>Per project</h3><div class="scroll"><table><thead><tr><th>Project</th><th class="num">Found</th><th class="num">Ready</th><th class="num">E-mailed</th><th class="num">Replies</th></tr></thead><tbody>
+        ${p.products.map((r) => `<tr><td><b>${esc(r.name)}</b> ${r.active ? "" : `<span class="badge warn">needs niche</span>`}<div class="hint">${esc(r.topic || "")}</div></td><td class="num">${num(r.found)}</td><td class="num">${num(r.ready)}</td><td class="num">${num(r.emailed)}</td><td class="num">${num(r.replies)}</td></tr>`).join("")}
+      </tbody></table></div></div>
+    </div>
+    <div class="two">
+      <div class="card"><h3>Learning: e-mail wording</h3><p class="hint">Variants that get replies are picked more often.</p>${statRows(p.variants, "Variant")}</div>
+      <div class="card"><h3>Learning: creator type</h3>${statRows(p.by_type, "Type")}</div>
+    </div>
+    <div class="card" style="margin-bottom:18px"><h3>Recently sent</h3>${p.recent.length ? `<div class="scroll"><table><thead><tr><th>Sent</th><th>Creator</th><th>Project</th><th>Subject</th></tr></thead><tbody>
+      ${p.recent.map((r) => `<tr><td>${esc(niceDate(r.at))}</td><td>${link(r.creator.url, r.creator.name)} <span class="badge grey">${esc(r.creator.stage)}</span></td><td>${esc(r.product)}</td><td class="hint">${esc(r.subject)}</td></tr>`).join("")}
+      </tbody></table></div>` : `<div class="empty">Nothing sent yet.</div>`}</div>
+    <div class="card"><h3>Promotion log <span class="hint">(newest first)</span></h3><pre class="log">${esc(p.log.join("\n")) || "No activity yet."}</pre></div>`;
 }
 
 function renderHelp(d) {

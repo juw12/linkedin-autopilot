@@ -4,7 +4,7 @@ Modules live in modules/ (git-ignored, personal data) and keep running on their 
   jobs         company job boards -> scored tracker, briefs, autofill apply sessions
   email_apply  JobStreet / LinkedIn ads with a recruiter e-mail -> CV + cover letter via the Gmail relay
   job_digest   daily digest + Gmail relay credentials used by email_apply
-  promote      (planned) promotion / UGC e-mails for projects
+  promote      creator / UGC outreach e-mails for the GitHub projects (modules/promote/promote.py)
 
 This file only reads their files, builds the "what I need from you" list, and runs a short whitelist of actions.
 Every reader is defensive: a missing or half-written file shows as "not set up" instead of breaking the dashboard.
@@ -33,6 +33,7 @@ TASKS = {
     "jobs": "Job search",
     "email": "Email applications",
     "bigtech": "Big Tech watch",
+    "promote": "Promotion",
 }
 PYTHONW = Path(sys.executable).with_name("pythonw.exe")
 PYTHON = Path(sys.executable).with_name("python.exe")
@@ -192,8 +193,13 @@ def jobs_section() -> dict:
         if answers.exists():
             fill_me = [line.split("|")[0].strip() for line in answers.read_text(encoding="utf-8").splitlines()
                        if "FILL ME" in line and "|" in line and not line.startswith("#")]
+        found_by_day = count_by_day(as_date(row.get("First seen")) for row in rows)
+        applied_by_day = count_by_day(as_date(row.get("Applied on")) for row in applied)
         return {
             "installed": True,
+            "found_by_day": found_by_day,
+            "applied_by_day": applied_by_day,
+            "daily_target": daily_target,
             "tracked": len(rows),
             "open": len(open_rows),
             "queue_total": len(queue),
@@ -240,11 +246,12 @@ def email_section() -> dict:
             series.append({"x": day, "y": by_day.get(day, 0)})
         week_start = (today - timedelta(days=6)).strftime("%Y-%m-%d")
 
-        leads, leads_total = [], 0
+        leads, leads_total, leads_by_day = [], 0, {}
         state_path = EMAIL / "state.json"
         if state_path.exists():
             try:
                 state = json.loads(state_path.read_text(encoding="utf-8"))
+                leads_by_day = count_by_day(str(item.get("found") or "")[:10] for item in state.get("site_queue", {}).values())
                 queued = [item for item in state.get("site_queue", {}).values() if item.get("status") == "queued"]
                 leads_total = len(queued)
                 leads = sorted(queued, key=lambda item: -(item.get("fit") or 0))[:15]
@@ -264,6 +271,8 @@ def email_section() -> dict:
         ]
         return {
             "installed": True,
+            "sent_by_day": by_day,
+            "leads_by_day": leads_by_day,
             "sent_total": len(sends),
             "sent_today": by_day.get(today.strftime("%Y-%m-%d"), 0),
             "sent_week": sum(count for day, count in by_day.items() if day >= week_start),
@@ -298,19 +307,173 @@ def tail(path: Path, lines: int) -> list[str]:
     return text.splitlines()[-lines:][::-1]
 
 
-# ------------------------------------------------------------------ promote module (planned)
+# ------------------------------------------------------------------ promote module
+
+PROMOTE_SCRIPT = PROMOTE / "promote.py"
+PROMOTE_VERBS = {"approve", "approveall", "send", "skip", "retry", "mark", "mode", "pause", "resume", "plan", "inbox", "discover", "tick"}
+PROMOTE_BACKGROUND = {"discover", "inbox", "tick"}  # slow (network): run without blocking the dashboard
+
 
 def promote_section() -> dict:
+    """The module runs in its own process (own imports, own SQLite), so a problem there never breaks the hub."""
+    if not PROMOTE_SCRIPT.exists():
+        return {"installed": False, "folder": str(PROMOTE)}
+
+    def build():
+        output = subprocess.run(
+            [str(PYTHON), str(PROMOTE_SCRIPT), "summary"], cwd=PROMOTE,
+            capture_output=True, text=True, encoding="utf-8", timeout=60, creationflags=NO_WINDOW,
+        )
+        if output.returncode != 0:
+            return {"installed": False, "error": (output.stderr or "summary failed").strip()[-300:], "folder": str(PROMOTE)}
+        return json.loads(output.stdout)
+
+    db_file = PROMOTE / "state.db"
+    version = int(db_file.stat().st_mtime) if db_file.exists() else 0
+    return cached(f"promote:{version}", 30, build)
+
+
+def promote_action(name: str) -> str:
+    """name = 'promote:<verb>[:<argument>]', e.g. promote:send:12 or promote:mark:yt:UC123|interested."""
+    _, _, rest = name.partition(":")
+    verb, _, argument = rest.partition(":")
+    if verb == "setkey":
+        _console([str(PYTHON), str(PROMOTE_SCRIPT), "set-youtube-key"], PROMOTE)
+        return "A window opened: paste your YouTube API key there."
+    if verb == "setupchecker":
+        _console([str(PYTHON), str(PROMOTE_SCRIPT), "setup-checker"], PROMOTE)
+        return "A window opened with the 3-minute reply-checker setup."
+    if verb == "openproducts":
+        os.startfile(PROMOTE / "products.json")
+        return "products.json opened."
+    if verb not in PROMOTE_VERBS:
+        raise ValueError(f"Unknown action: {name}")
+    command = [str(PYTHON), str(PROMOTE_SCRIPT), "action", verb] + ([argument] if argument else [])
+    for key in [key for key in _cache if key.startswith("promote:")]:
+        _cache.pop(key, None)
+    if verb in PROMOTE_BACKGROUND:
+        subprocess.Popen([str(PYTHONW)] + command[1:], cwd=PROMOTE, creationflags=NO_WINDOW)
+        return {"discover": "Searching YouTube for creators in the background; results appear in a few minutes.",
+                "inbox": "Checking for replies in the background.",
+                "tick": "Promotion run started in the background."}[verb]
+    output = subprocess.run(command, cwd=PROMOTE, capture_output=True, text=True, encoding="utf-8", timeout=180, creationflags=NO_WINDOW)
+    if output.returncode != 0:
+        raise RuntimeError((output.stderr or "promote action failed").strip().splitlines()[-1])
+    return (output.stdout.strip().splitlines() or ["Done."])[-1]
+
+
+# ------------------------------------------------------------------ per-day numbers for every automation
+
+def count_by_day(days) -> dict[str, int]:
+    """{'YYYY-MM-DD': n} from dates or ISO strings (anything that doesn't look like a date is ignored)."""
+    counts: dict[str, int] = {}
+    for day in days:
+        key = day.strftime("%Y-%m-%d") if isinstance(day, (date, datetime)) else str(day or "")[:10]
+        if re.fullmatch(r"\d{4}-\d{2}-\d{2}", key):
+            counts[key] = counts.get(key, 0) + 1
+    return counts
+
+
+def _sqlite_by_day(db_file: Path, sql: str) -> dict[str, int]:
+    """Read-only query returning (day, count) rows; {} if the database is missing or busy."""
+    import sqlite3
+
+    if not db_file.exists():
+        return {}
+    try:
+        connection = sqlite3.connect(f"file:{db_file}?mode=ro", uri=True, timeout=3)
+        try:
+            return {str(day)[:10]: count for day, count in connection.execute(sql) if day}
+        finally:
+            connection.close()
+    except sqlite3.Error:
+        return {}
+
+
+def _bigtech_by_day() -> dict[str, int]:
+    found_csv = EMAIL / "bigtech_jobs.csv"
+    if not found_csv.exists():
+        return {}
+
+    def build():
+        with open(found_csv, encoding="utf-8-sig", newline="") as handle:
+            return count_by_day(row.get("found") for row in csv.DictReader(handle))
+
+    return cached(f"bigtech:{found_csv.stat().st_mtime}", 300, build)
+
+
+def _daily_row(module: str, tab: str, label: str, by_day: dict[str, int], limit=None, limit_label: str = "",
+               note: str = "") -> dict:
+    today = date.today()
+    last14 = [(today - timedelta(days=offset)).strftime("%Y-%m-%d") for offset in range(13, -1, -1)]
+    series = [{"x": day, "y": by_day.get(day, 0)} for day in last14]
+    first_day = min(by_day) if by_day else None
+    # average over the last 7 days, or over the days since it started if that is shorter (a new module isn't penalised)
+    window_start = max(today - timedelta(days=6), datetime.strptime(first_day, "%Y-%m-%d").date()) if first_day else today
+    window_days = (today - window_start).days + 1
+    window_total = sum(count for day, count in by_day.items() if day >= window_start.strftime("%Y-%m-%d"))
     return {
-        "installed": PROMOTE.exists() and any(PROMOTE.iterdir()),
-        "planned": [
-            "Find creators / communities that fit each project (UGC, newsletters, small YouTubers)",
-            "Write a short, personal pitch per contact from the project's real README facts",
-            "Send from your Gmail relay with daily caps and one polite follow-up",
-            "Track replies and which projects get picked up, next to LinkedIn reach",
-        ],
-        "folder": str(PROMOTE),
+        "module": module,
+        "tab": tab,
+        "label": label,
+        "today": by_day.get(today.strftime("%Y-%m-%d"), 0),
+        "avg7": round(window_total / window_days, 1) if window_days else 0,
+        "avg_days": window_days,
+        "best": max(by_day.values()) if by_day else 0,
+        "total": sum(by_day.values()),
+        "limit": limit,
+        "limit_label": limit_label or (f"{limit} a day" if limit else "no limit"),
+        "series": series,
+        "note": note,
     }
+
+
+def daily_stats(sections: dict) -> list[dict]:
+    """Today / 7-day average / best day / limit for every automation, from the records each one already keeps."""
+    rows: list[dict] = []
+    promote = sections.get("promote", {})
+    if PROMOTE_SCRIPT.exists():
+        cap = promote.get("cap")
+        rows.append(_daily_row(
+            "Creator outreach", "promote", "E-mails to creators",
+            _sqlite_by_day(PROMOTE / "state.db", "select substr(sent_at,1,10), count(*) from messages where status='sent' group by 1"),
+            cap, f"{cap} a day (warm-up, rises to 20)" if cap else "",
+            "Limited by the Gmail warm-up now; later by how many creators publish an e-mail.",
+        ))
+        rows.append(_daily_row(
+            "Creator outreach", "promote", "Creators found with a usable e-mail",
+            _sqlite_by_day(PROMOTE / "state.db",
+                           "select substr(found_at,1,10), count(*) from creators where email is not null and email_source is not null and stage not in ('skipped','no_email','bounced','suppressed') group by 1"),
+            None, "set by searches a day", "YouTube + websites + podcasts, after the quality checks.",
+        ))
+    email = sections.get("email", {})
+    if email.get("installed"):
+        rows.append(_daily_row(
+            "E-mail applications", "email", "Applications e-mailed", email.get("sent_by_day", {}),
+            email.get("max_per_day"), "", "Only ads that list a recruiter e-mail and pass the fit and salary rules.",
+        ))
+        rows.append(_daily_row(
+            "E-mail applications", "email", "Site-only leads added", email.get("leads_by_day", {}),
+            None, "", "Good fits without an e-mail: apply on the site.",
+        ))
+    bigtech = _bigtech_by_day()
+    if bigtech:
+        rows.append(_daily_row("Big Tech watch", "email", "Big Tech roles found", bigtech, None, "",
+                               "New matching roles at the watched companies."))
+    jobs = sections.get("jobs", {})
+    if jobs.get("installed"):
+        rows.append(_daily_row("Job search", "jobs", "Matching jobs found", jobs.get("found_by_day", {}), None, "",
+                               "New roles on the company job boards that fit your CV."))
+        target = jobs.get("daily_target")
+        rows.append(_daily_row("Job search", "jobs", "Applications submitted", jobs.get("applied_by_day", {}),
+                               target, f"goal {target} a day" if target else "",
+                               "Needs you: the apply session fills the form, you press Submit."))
+    rows.append(_daily_row(
+        "LinkedIn posts", "linkedin", "Posts published",
+        _sqlite_by_day(ROOT / "state.db", "select substr(slot,1,10), count(*) from posts where status='posted' group by 1"),
+        None, "3 a week (Tue/Wed/Thu)", "Posting days are fixed, so most days show 0.",
+    ))
+    return rows
 
 
 # ------------------------------------------------------------------ what I need from you
@@ -403,9 +566,9 @@ def help_sections(tasks: dict) -> list[dict]:
         {"module": "Email", "runs": "E-mail applications every hour; Big Tech watch every 4 hours. " + when("email", ""),
          "auto": "Reads JobStreet and LinkedIn ads, and when an ad lists a recruiter e-mail it sends your CV and a tailored letter from your sending Gmail; replies go to your personal inbox. One follow-up after 7 days if no reply, plus a daily report.",
          "you": "Reply to recruiters who answer. Jobs without an e-mail land on the leads page for you to apply on the site."},
-        {"module": "Promote", "runs": "Not built yet.",
-         "auto": "Planned: promotion and UGC outreach e-mails for your projects, tracked next to LinkedIn reach.",
-         "you": "Tell Vector when you're ready and it plugs into this tab."},
+        {"module": "Promote", "runs": "Every 30 minutes; finds creators once a day, sends 09:00-20:00, checks replies every 2 hours. " + when("promote", ""),
+         "auto": "Finds YouTube creators whose niche fits each GitHub project (only e-mails they published themselves), writes a short personal e-mail that mentions one of their videos, rotates through every project, warms up from 5 to 20 e-mails a day, sends one follow-up after 5 days, stops when someone replies, and learns which wording and creator types answer.",
+         "you": "Review mode (default): press Send or Approve all in the Promote tab. Answer replies from your personal inbox and mark them Interested / Not a fit. Add TikTok / Instagram creators by hand in creators_import.csv."},
     ]
 
 
@@ -466,6 +629,8 @@ def run_action(name: str) -> str:
     if name == "open_modules":
         os.startfile(MODULES)
         return "Modules folder opened."
+    if name.startswith("promote:"):
+        return promote_action(name)
     raise ValueError(f"Unknown action: {name}")
 
 
@@ -479,9 +644,18 @@ def build(linkedin_overview: dict | None) -> dict:
             sections[key] = reader()
         except Exception as error:  # one broken module must not take the dashboard down
             sections[key] = {"installed": False, "error": f"{type(error).__name__}: {error}"}
+    try:
+        daily = daily_stats(sections)
+    except Exception as error:  # stats are nice-to-have; never take the dashboard down
+        daily = [{"module": "Stats", "tab": "overview", "label": f"unavailable ({type(error).__name__})", "today": 0,
+                  "avg7": 0, "avg_days": 0, "best": 0, "total": 0, "limit": None, "limit_label": "", "series": [], "note": str(error)[:200]}]
     return {
         **sections,
+        "daily": daily,
         "tasks": tasks,
-        "todo": todo_items(linkedin_overview, sections["jobs"], sections["email"], tasks),
+        "todo": sorted(
+            todo_items(linkedin_overview, sections["jobs"], sections["email"], tasks) + sections["promote"].get("todo", []),
+            key=lambda item: item["priority"],
+        ),
         "help": help_sections(tasks),
     }
