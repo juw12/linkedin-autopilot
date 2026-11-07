@@ -10,6 +10,8 @@ A running app notices the new code by itself and restarts; scheduled tasks pick 
 
 from __future__ import annotations
 
+import os
+import shutil
 import subprocess
 import sys
 from datetime import datetime
@@ -22,8 +24,22 @@ TASK_NAME = "Updates"
 NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
 
+def find_git() -> str:
+    """Task Scheduler runs with a short PATH, so look in the usual Git for Windows folders too."""
+    candidates = [
+        shutil.which("git"),
+        os.path.expandvars(r"%LOCALAPPDATA%\Programs\Git\cmd\git.exe"),
+        os.path.expandvars(r"%ProgramFiles%\Git\cmd\git.exe"),
+        os.path.expandvars(r"%ProgramFiles(x86)%\Git\cmd\git.exe"),
+    ]
+    return next((path for path in candidates if path and Path(path).exists()), "git")
+
+
+GIT = find_git()
+
+
 def git(*args: str, cwd: Path = CODE_DIR, timeout: int = 60) -> subprocess.CompletedProcess:
-    return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, timeout=timeout, creationflags=NO_WINDOW)
+    return subprocess.run([GIT, *args], cwd=cwd, capture_output=True, text=True, timeout=timeout, creationflags=NO_WINDOW)
 
 
 def pull_latest_version(folder: Path = CODE_DIR) -> str:
