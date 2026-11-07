@@ -745,7 +745,12 @@ if (location.hostname === "127.0.0.1" && TOKEN !== "demo") {
       const changed = knownVersion && (version.boot !== knownVersion.boot || version.page !== knownVersion.page);
       knownVersion = knownVersion && !changed ? knownVersion : version;
       const busy = document.querySelector("button[disabled]") || document.querySelector("dialog[open]");
-      if (changed && !busy) location.reload();
+      if (changed && !busy) {
+        try {
+          sessionStorage.setItem("rp-updated", "1");
+        } catch (error) {}
+        location.reload();
+      }
     } catch (error) {
       // server is restarting: try again on the next tick
     }
@@ -754,6 +759,10 @@ if (location.hostname === "127.0.0.1" && TOKEN !== "demo") {
 try {
   const savedTab = sessionStorage.getItem("rp-tab");
   if (savedTab && document.getElementById(savedTab)) showTab(savedTab);
+  if (sessionStorage.getItem("rp-updated")) {
+    sessionStorage.removeItem("rp-updated");
+    toast("ReachPilot updated to the latest version.");
+  }
 } catch (error) {}
 </script>
 </body>
