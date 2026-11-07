@@ -14,6 +14,8 @@
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT">
 </p>
 
+<p align="center"><a href="https://juw12.github.io/reachpilot/"><b>Live demo</b></a> (the real dashboard with made-up data)</p>
+
 ## ReachPilot hub
 
 The app is now called **ReachPilot** (formerly LinkedIn Autopilot). The LinkedIn poster is still the core;
