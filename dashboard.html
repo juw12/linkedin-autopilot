@@ -30,17 +30,24 @@
   @media (max-width: 760px) {
     .bar { flex-wrap: wrap; gap: 4px 12px; padding: 8px 14px 0; }
     .brand { font-size: 15px; }
-    nav { order: 3; flex: 1 0 100%; flex-wrap: wrap; gap: 4px; padding: 0 0 6px; }
+    .navrow { order: 3; flex: 1 0 100%; display: flex; gap: 4px; align-items: flex-start; padding: 0 0 6px; }
+    nav { flex: 0 1 auto; flex-wrap: wrap; gap: 4px; }
     nav::-webkit-scrollbar { display: none; }
     
-    nav button { min-height: 44px; padding: 8px 12px; background: #f1f3f5; border-radius: 8px; }
+    nav button { min-height: 44px; padding: 8px 10px; background: #f1f3f5; border-radius: 8px; }
     nav button[aria-selected="true"] { background: var(--blue-soft); }
+    nav:not(.open) button.sec:not([aria-selected="true"]) { display: none; }
+    .more { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 10px; border: 0; border-radius: 8px;
+      background: #f1f3f5; font: inherit; color: var(--muted); cursor: pointer; white-space: nowrap; }
+    .more:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
     .module h3 .btn { min-height: 44px; }
     .help-btn { width: 44px; height: 44px; }
+    .btn { min-height: 44px; padding: 10px 16px; }
     main { padding: 14px; }
     td a, .todo li a, details summary { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
   }
   main { max-width: 1180px; margin: 0 auto; padding: 20px; }
+  @media (min-width: 761px) { .navrow { display: contents; } .more { display: none; } }
   section[hidden] { display: none; }
   h2 { font-size: 18px; margin: 0 0 12px; }
   h3 { font-size: 15px; margin: 0 0 10px; }
@@ -127,6 +134,13 @@
   .todo.compact .actions { margin-top: 0; flex: none; }
   @media (max-width: 760px) { .todo.compact { display: block; } .todo.compact .actions { margin-top: 8px; } }
   .module { border-top: 4px solid var(--blue); }
+  .runs { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 18px; padding: 0; list-style: none; }
+  .runs li { display: flex; align-items: center; gap: 8px; background: var(--card); border-radius: 8px; padding: 8px 12px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.08); font-size: 13px; }
+  .runs .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--green); flex: none; }
+  .runs li.bad .dot { background: var(--red); }
+  .runs b { font-weight: 600; }
+  @media (max-width: 760px) { .runs li { flex: 1 1 100%; } }
   .module .big { font-size: 24px; font-weight: 700; }
   .module h3 { display: flex; justify-content: space-between; align-items: center; }
   .module h3 .btn { min-height: 38px; padding: 8px 18px; }
@@ -171,19 +185,22 @@
 <header class="top">
   <div class="bar">
     <h1 class="brand"><img class="logo" src="/icon.svg" alt="" width="28" height="28">ReachPilot</h1>
-    <nav role="tablist">
+    <div class="navrow">
+    <nav role="tablist" id="tabs">
       <button role="tab" data-tab="overview" aria-selected="true">Overview</button>
       <button role="tab" data-tab="todo">To do<span class="tab-count" id="todo-count" hidden></span></button>
       <button role="tab" data-tab="linkedin">LinkedIn</button>
-      <button role="tab" data-tab="schedule">Schedule</button>
-      <button role="tab" data-tab="reach">Reach</button>
-      <button role="tab" data-tab="github">GitHub</button>
-      <button role="tab" data-tab="learning">Learning</button>
+      <button role="tab" class="sec" data-tab="schedule">Schedule</button>
+      <button role="tab" class="sec" data-tab="reach">Reach</button>
+      <button role="tab" class="sec" data-tab="github">GitHub</button>
+      <button role="tab" class="sec" data-tab="learning">Learning</button>
       <button role="tab" data-tab="jobs">Jobs</button>
-      <button role="tab" data-tab="email">Email</button>
-      <button role="tab" data-tab="promote">Promote</button>
-      <button role="tab" data-tab="log">Log</button>
+      <button role="tab" class="sec" data-tab="email">Email</button>
+      <button role="tab" class="sec" data-tab="promote">Promote</button>
+      <button role="tab" class="sec" data-tab="log">Log</button>
     </nav>
+    <button type="button" class="more" id="nav-more" aria-expanded="false" aria-controls="tabs">More ▾</button>
+    </div>
     <span class="updated" id="updated">Loading…</span>
     <button class="help-btn" id="help-open" aria-label="Help: what ReachPilot does and what it needs from you" title="Help">?</button>
   </div>
@@ -544,13 +561,26 @@ function todoCard(item, compact = false) {
     : `${tab ? `<button class="btn ghost" data-goto="${tab}">Open ${esc(item.module)}</button>` : ""}<button class="btn ghost" data-done="${esc(todoKey(item))}">Mark done</button>`;
   return `<div class="todo p${item.priority}${compact ? " compact" : ""}">
     <div class="text">
-      <span class="badge ${item.priority === 1 ? "bad" : item.priority === 2 ? "warn" : "grey"}">${esc(item.module)}</span>
+      <span class="badge ${item.priority === 1 ? "bad" : item.priority === 2 ? "warn" : "grey"}">${esc(item.module)}${item.priority === 1 ? " · urgent" : ""}</span>
       <h4>${esc(item.title)}</h4>
       <div class="hint">${esc(item.detail)}</div>
       ${links}
     </div>
     <div class="actions">${buttons}</div>
   </div>`;
+}
+
+function runStrip(tasks) {
+  const items = Object.entries(tasks || {}).filter(([, t]) => t.installed);
+  if (!items.length) return "";
+  const time = (stamp) => (stamp && stamp.includes("·") ? stamp.split("·")[1].trim() : stamp || "–");
+  const rows = items.map(([key, t]) => {
+    const state = t.ok ? `ran ${esc(time(t.last_run))}` : `<b>last run failed</b> (${esc(t.last_result || "error")})`;
+    const label = t.ok ? "OK" : "Failed";
+    return `<li class="${t.ok ? "ok" : "bad"}"><span class="dot" role="img" aria-label="${label}"></span>
+      <span><b>${esc(t.name)}</b> · ${state} · next ${esc(time(t.next_run))}</span></li>`;
+  }).join("");
+  return `<ul class="runs" aria-label="Scheduled automations">${rows}</ul>`;
 }
 
 function renderOverview(d) {
@@ -564,6 +594,7 @@ function renderOverview(d) {
       ${todo.slice(0, 5).map((item) => todoCard(item, true)).join("")}
       ${todo.length > 5 ? `<button class="btn ghost" data-goto="todo">See all ${todo.length} in To do ›</button>` : ""}
     </div>` : `<div class="card" style="margin-bottom:18px"><h3>Nothing needs you right now</h3><p class="hint">Everything is running on its own.</p></div>`}
+    ${runStrip(h.tasks)}
     <div class="card" style="margin-bottom:18px">
       <h3>Per day, every automation <span class="hint">· today, average of the last 7 days, best day and the daily limit</span></h3>
       ${dailyTable(h.daily)}
@@ -774,7 +805,7 @@ function showTab(id) {
   try {
     sessionStorage.setItem("rp-tab", id);
   } catch (error) {}
-  document.querySelectorAll("nav button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === id)));
+  document.querySelectorAll("nav button[data-tab]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === id)));
   document.querySelectorAll("main section").forEach((s) => (s.hidden = s.id !== id));
 }
 
@@ -809,8 +840,14 @@ async function load() {
   }
 }
 
-document.querySelectorAll("nav button").forEach((button) => {
+document.querySelectorAll("nav button[data-tab]").forEach((button) => {
   button.addEventListener("click", () => showTab(button.dataset.tab));
+});
+document.getElementById("nav-more").addEventListener("click", (event) => {
+  const nav = document.getElementById("tabs");
+  const open = nav.classList.toggle("open");
+  event.currentTarget.setAttribute("aria-expanded", String(open));
+  event.currentTarget.textContent = open ? "Less ▴" : "More ▾";
 });
 
 load();
