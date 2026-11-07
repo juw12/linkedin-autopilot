@@ -39,6 +39,7 @@ SESSION_TOKEN = secrets.token_urlsafe(24)
 BOOT_ID = secrets.token_hex(6)  # changes on every (re)start; the page reloads itself when it sees a new one
 CODE_DIR = Path(__file__).parent
 CODE_CHECK_SECONDS = 5
+UPDATE_CHECK_SECONDS = 30 * 60  # how often the app looks for a newer version on GitHub
 NO_WINDOW_ENV = "REACHPILOT_NO_WINDOW"  # set when the dashboard restarts itself: reuse the open window
 ICON_FILES = {  # url path -> (file in icons/, content type); one mark for favicon, app window and taskbar
     "/icon.svg": ("icon.svg", "image/svg+xml"),
@@ -487,6 +488,44 @@ def restart_process() -> None:
     )
 
 
+def git(*args: str, cwd: Path = CODE_DIR, timeout: int = 60) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        ["git", *args], cwd=cwd, capture_output=True, text=True, timeout=timeout,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+    )
+
+
+def pull_latest_version(folder: Path = CODE_DIR) -> str:
+    """Fast-forward to the newest version on GitHub when that is safe: on main, no local edits, nothing unpushed.
+    Returns what happened; never merges, rebases or touches local changes."""
+    try:
+        if git("rev-parse", "--abbrev-ref", "HEAD", cwd=folder).stdout.strip() != "main":
+            return "skipped: not on main"
+        if git("status", "--porcelain", "--untracked-files=no", cwd=folder).stdout.strip():
+            return "skipped: local edits in progress"
+        if git("fetch", "-q", "origin", "main", cwd=folder).returncode != 0:
+            return "skipped: GitHub not reachable"
+        behind = int(git("rev-list", "--count", "HEAD..origin/main", cwd=folder).stdout.strip() or 0)
+        ahead = int(git("rev-list", "--count", "origin/main..HEAD", cwd=folder).stdout.strip() or 0)
+        if behind == 0:
+            return "up to date"
+        if ahead:
+            return "skipped: local commits not pushed yet"
+        if git("merge", "--ff-only", "-q", "origin/main", cwd=folder).returncode != 0:
+            return "skipped: could not fast-forward"
+        return f"updated: {behind} new change(s)"
+    except Exception as error:
+        return f"skipped: {error}"
+
+
+def update_from_github() -> None:
+    """Keep the app on the newest version; watch_code() then restarts it and the page reloads."""
+    time.sleep(60)
+    while True:
+        pull_latest_version()
+        time.sleep(UPDATE_CHECK_SECONDS)
+
+
 def run() -> None:
     """Reuse a dashboard that is already running, otherwise start one on the first free port."""
     server = None
@@ -520,6 +559,7 @@ def run() -> None:
     server.restart_requested = False
     threading.Thread(target=stop_when_idle, daemon=True).start()
     threading.Thread(target=watch_code, args=(server,), daemon=True).start()
+    threading.Thread(target=update_from_github, daemon=True).start()
     if not __import__("os").environ.pop(NO_WINDOW_ENV, None):
         open_window(url)
     server.serve_forever()
