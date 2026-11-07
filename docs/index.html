@@ -53,7 +53,10 @@
     nav { order: 3; flex: 1 0 100%; flex-wrap: wrap; gap: 4px; padding: 0 0 6px; }
     nav::-webkit-scrollbar { display: none; }
     
-    nav button { min-height: 44px; padding: 8px 12px; }
+    nav button { min-height: 44px; padding: 8px 12px; background: #f1f3f5; border-radius: 8px; }
+    nav button[aria-selected="true"] { background: var(--blue-soft); }
+    .module h3 .btn { min-height: 44px; }
+    .help-btn { width: 44px; height: 44px; }
     main { padding: 14px; }
     td a, .todo li a, details summary { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
   }
@@ -133,14 +136,21 @@
   .tab-count { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; border-radius: 9px; background: var(--red); color: #fff; font-size: 12px; line-height: 18px; text-align: center; font-weight: 700; }
   .todo { background: var(--card); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,.08); border-left: 5px solid var(--amber); }
   .todo.p1 { border-left-color: var(--red); }
-  .todo.p3 { border-left-color: #a9b3ba; }
+  .todo.p3, .todo.p4 { border-left-color: #a9b3ba; }
   .todo h4 { margin: 2px 0 2px; font-size: 15px; }
   .todo ul { margin: 8px 0 0; padding-left: 18px; }
   .todo li { margin: 2px 0; }
+  .todo.compact { display: flex; gap: 16px; align-items: center; justify-content: space-between; padding: 10px 14px; margin-bottom: 8px; }
+  .todo.compact .text { min-width: 0; }
+  .todo.compact h4 { display: inline; margin: 0 0 0 6px; }
+  .todo.compact ul { margin: 4px 0 0; }
+  .todo.compact .actions { margin-top: 0; flex: none; }
+  @media (max-width: 760px) { .todo.compact { display: block; } .todo.compact .actions { margin-top: 8px; } }
   .module { border-top: 4px solid var(--blue); }
-      .module.promote { border-top-color: #a9b3ba; }
   .module .big { font-size: 24px; font-weight: 700; }
   .module h3 { display: flex; justify-content: space-between; align-items: center; }
+  .module h3 .btn { min-height: 38px; padding: 8px 18px; }
+  td.zero b { color: var(--muted); font-weight: 600; }
   .toast { position: fixed; right: 18px; bottom: 18px; z-index: 5; background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.25); max-width: 380px; }
   .toast[hidden] { display: none; }
   dialog.help { border: 0; border-radius: 12px; padding: 0; max-width: 720px; width: calc(100% - 32px); box-shadow: 0 10px 40px rgba(0,0,0,.3); }
@@ -154,7 +164,7 @@
   table.daily td.n, table.daily th.n { text-align: right; white-space: nowrap; }
   table.daily tr.group-start td { border-top: 1px solid rgba(127,127,127,.25); }
   table.daily td { vertical-align: middle; }
-  table.daily .repeat { display: none; }
+  table.daily .repeat, table.daily .ph { display: none; }
   @media (max-width: 600px) {
     table.daily thead { display: none; }
     .scroll table.daily { min-width: 0; }
@@ -165,11 +175,14 @@
     table.daily tr.group-start td { border-top: 0; }
     table.daily td { display: block; padding: 0; border: 0; text-align: left; }
     table.daily td.mod, table.daily td.what, table.daily td.sp { grid-column: 1 / -1; }
-    table.daily .repeat { display: inline; font-weight: 700; }
+    table.daily tr:not(.group-start) { border-top: 0; padding-top: 4px; }
     table.daily td.what { color: var(--muted); margin-bottom: 4px; }
     table.daily td[data-label]::before { content: attr(data-label) " "; color: var(--muted); font-weight: 400; }
     table.daily td.n, table.daily td.hint { white-space: normal; text-align: left; }
     table.daily td.sp { margin-top: 6px; }
+    table.daily .dk { display: none; }
+    table.daily .ph { display: inline; }
+    table.daily td.what { color: var(--ink); font-weight: 600; }
   }
   table.daily a.goto { cursor: pointer; color: var(--ink); }
 </style>
@@ -215,7 +228,7 @@
 
 <script>
 const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const num = (value) => (value === null || value === undefined ? "–" : Number(value).toLocaleString());
+const num = (value) => (value === null || value === undefined ? "–" : Number(value).toLocaleString("en-US"));
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -277,13 +290,15 @@ function dailyTable(rows) {
     lastModule = r.module;
     const avgNote = r.avg_days && r.avg_days < 7 ? ` <span class="hint">(${r.avg_days} d)</span>` : "";
     const atLimit = r.limit && r.today >= r.limit ? ` <span class="badge warn">at limit</span>` : "";
+    const limitText = r.limit_label || "";
+    const phoneLimit = /^\d/.test(limitText) ? `Limit ${limitText}` : limitText.charAt(0).toUpperCase() + limitText.slice(1);
     return `<tr${first ? ' class="group-start"' : ""}>
       <td class="mod">${first ? `<a class="goto" data-goto="${esc(r.tab)}"><b>${esc(r.module)}</b></a>` : `<span class="repeat">${esc(r.module)}</span>`}</td>
       <td class="what" title="${esc(r.note || "")}">${esc(r.label)}</td>
-      <td class="n" data-label="Today"><b>${num(r.today)}</b>${atLimit}</td>
+      <td class="n${r.today ? "" : " zero"}" data-label="Today"><b>${num(r.today)}</b>${atLimit}</td>
       <td class="n" data-label="Avg / day">${num(r.avg7)}${avgNote}</td>
       <td class="n" data-label="Best day">${num(r.best)}</td>
-      <td class="hint" data-label="Daily limit">${esc(r.limit_label || "")}</td>
+      <td class="hint"><span class="dk">${esc(limitText)}</span><span class="ph">${esc(phoneLimit)}</span></td>
       <td class="sp">${spark(r.series)}</td>
     </tr>`;
   }).join("");
@@ -464,7 +479,11 @@ function toast(message) {
 }
 
 async function act(name, button) {
-  if (button) button.disabled = true;
+  const label = button ? button.textContent : "";
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Working…";
+  }
   try {
     const response = await fetch("/api/action", {
       method: "POST",
@@ -477,7 +496,12 @@ async function act(name, button) {
   } catch (error) {
     toast("Couldn't reach ReachPilot: " + error.message);
   } finally {
-    if (button) setTimeout(() => (button.disabled = false), 1500);
+    if (button) {
+      setTimeout(() => {
+        button.disabled = false;
+        button.textContent = label;
+      }, 1500);
+    }
   }
 }
 
@@ -486,6 +510,19 @@ document.addEventListener("click", (event) => {
   if (button) act(button.dataset.action, button);
   const jump = event.target.closest("[data-goto]");
   if (jump) showTab(jump.dataset.goto);
+  const done = event.target.closest("[data-done]");
+  if (done) {
+    const keys = dismissed();
+    keys.push(done.dataset.done);
+    try {
+      localStorage.setItem("rp-done", JSON.stringify(keys.slice(-50)));
+    } catch (error) {}
+    toast("Marked done. It comes back if anything about it changes.");
+    if (latest) {
+      renderOverview(latest);
+      renderTodo(latest);
+    }
+  }
 });
 
 function actionButton(name, label, ghost = false) {
@@ -496,27 +533,57 @@ function link(url, label) {
   return url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(label)}</a>` : esc(label);
 }
 
-function todoCard(item) {
+const MODULE_TAB = { jobs: "jobs", "job search": "jobs", "e-mail": "email", email: "email", linkedin: "linkedin", promote: "promote", "creator outreach": "promote" };
+
+function todoKey(item) {
+  return `${item.module}|${item.title}|${item.detail}`;
+}
+
+function dismissed() {
+  try {
+    return JSON.parse(localStorage.getItem("rp-done") || "[]");
+  } catch (error) {
+    return [];
+  }
+}
+
+function openTodos(items) {
+  const done = dismissed();
+  return items
+    .filter((item) => !done.includes(todoKey(item)))
+    .map((item, index) => [item, index])
+    .sort((a, b) => a[0].priority - b[0].priority || a[1] - b[1])
+    .map(([item]) => item);
+}
+
+function todoCard(item, compact = false) {
   const links = item.links.length
     ? `<ul>${item.links.map((l) => `<li>${link(l.url, l.label)}${l.note ? ` <span class="hint">· ${esc(l.note)}</span>` : ""}</li>`).join("")}</ul>` : "";
-  return `<div class="todo p${item.priority}">
-    <span class="badge ${item.priority === 1 ? "bad" : item.priority === 2 ? "warn" : "grey"}">${esc(item.module)}</span>
-    <h4>${esc(item.title)}</h4>
-    <div class="hint">${esc(item.detail)}</div>
-    ${links}
-    ${item.action ? `<div class="actions">${actionButton(item.action, item.action_label)}</div>` : ""}
+  const tab = MODULE_TAB[String(item.module).toLowerCase()];
+  const buttons = item.action
+    ? actionButton(item.action, item.action_label)
+    : `${tab ? `<button class="btn ghost" data-goto="${tab}">Open ${esc(item.module)}</button>` : ""}<button class="btn ghost" data-done="${esc(todoKey(item))}">Mark done</button>`;
+  return `<div class="todo p${item.priority}${compact ? " compact" : ""}">
+    <div class="text">
+      <span class="badge ${item.priority === 1 ? "bad" : item.priority === 2 ? "warn" : "grey"}">${esc(item.module)}</span>
+      <h4>${esc(item.title)}</h4>
+      <div class="hint">${esc(item.detail)}</div>
+      ${links}
+    </div>
+    <div class="actions">${buttons}</div>
   </div>`;
 }
 
 function renderOverview(d) {
   const o = d.overview, h = d.hub, jobs = h.jobs, email = h.email;
   const next = o.next_post;
-  const urgent = h.todo.filter((t) => t.priority === 1);
+  const todo = openTodos(h.todo);
+  const urgent = todo.filter((t) => t.priority === 1);
   document.getElementById("overview").innerHTML = `
-    ${h.todo.length ? `<div class="card" style="margin-bottom:18px">
-      <h3>What I need from you <span class="hint">· ${h.todo.length} item${h.todo.length === 1 ? "" : "s"}${urgent.length ? `, ${urgent.length} urgent` : ""}</span></h3>
-      ${h.todo.slice(0, 3).map(todoCard).join("")}
-      ${h.todo.length > 3 ? `<button class="btn ghost" data-goto="todo">See all ${h.todo.length}</button>` : ""}
+    ${todo.length ? `<div class="card" style="margin-bottom:18px">
+      <h3>What I need from you <span class="hint">· ${todo.length} item${todo.length === 1 ? "" : "s"}${urgent.length ? `, ${urgent.length} urgent` : ""}</span></h3>
+      ${todo.slice(0, 5).map((item) => todoCard(item, true)).join("")}
+      ${todo.length > 5 ? `<button class="btn ghost" data-goto="todo">See all ${todo.length} in To do ›</button>` : ""}
     </div>` : `<div class="card" style="margin-bottom:18px"><h3>Nothing needs you right now</h3><p class="hint">Everything is running on its own.</p></div>`}
     <div class="card" style="margin-bottom:18px">
       <h3>Per day, every automation <span class="hint">· today, average of the last 7 days, best day and the daily limit</span></h3>
@@ -551,14 +618,14 @@ function renderOverview(d) {
 }
 
 function renderTodo(d) {
-  const items = d.hub.todo;
+  const items = openTodos(d.hub.todo);
   const counter = document.getElementById("todo-count");
   counter.hidden = !items.length;
   counter.textContent = items.length;
   document.getElementById("todo").innerHTML = `
     <h2>What I need from you</h2>
     <p class="hint">Only things a robot can't or shouldn't do for you. Red first. Everything else runs by itself.</p>
-    ${items.length ? items.map(todoCard).join("") : `<div class="empty">Nothing right now.</div>`}`;
+    ${items.length ? items.map((item) => todoCard(item)).join("") : `<div class="empty">Nothing needs you right now. New items appear here when an automation gets stuck.</div>`}`;
 }
 
 function renderJobs(d) {
@@ -757,7 +824,7 @@ async function load() {
     renderGithub(data);
     renderLearning(data);
     renderLog(data);
-    document.getElementById("updated").textContent = "Updated " + new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    document.getElementById("updated").textContent = "Updated " + new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
   } catch (error) {
     document.getElementById("updated").textContent = "Couldn't load data: " + error.message;
   }
