@@ -1,4 +1,4 @@
-"""LinkedIn Autopilot for github.com/juw12.
+"""ReachPilot - LinkedIn posting module for github.com/juw12.
 
 Runs every 30 minutes from Windows Task Scheduler (`autopilot.py install`). Each run:
   1. syncs GitHub (new repos, new releases, real commit activity),
@@ -47,7 +47,8 @@ INBOX = ROOT / "analytics_inbox"
 PAUSE_FLAG = ROOT / "PAUSE"
 LOCK_PATH = ROOT / ".tick.lock"
 PAGES_CHECKOUT = ROOT / ".pages"
-TASK_NAME = "LinkedIn Autopilot (juw12)"
+TASK_NAME = "LinkedIn posts"
+TASK_PATH = "\\ReachPilot\\"
 WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 log = logging.getLogger("autopilot")
@@ -463,17 +464,17 @@ def token_health(db, now: datetime) -> dict | None:
     today = now.strftime("%Y-%m-%d")
     if token is None:
         if kv_get(db, "warned_token") != today:
-            notify("LinkedIn Autopilot", "Not connected to LinkedIn yet. Run: python autopilot.py auth")
+            notify("ReachPilot", "Not connected to LinkedIn yet. Run: python autopilot.py auth")
             kv_set(db, "warned_token", today)
         return None
     days_left = (token["expires_at"] - time.time()) / 86400
     if days_left <= 0:
         if kv_get(db, "warned_token") != today:
-            notify("LinkedIn Autopilot", "LinkedIn login expired. Run: python autopilot.py auth")
+            notify("ReachPilot", "LinkedIn login expired. Run: python autopilot.py auth")
             kv_set(db, "warned_token", today)
         return None
     if days_left < 7 and kv_get(db, "warned_token") != today:
-        notify("LinkedIn Autopilot", f"LinkedIn login expires in {days_left:.0f} days. Run: python autopilot.py auth")
+        notify("ReachPilot", f"LinkedIn login expires in {days_left:.0f} days. Run: python autopilot.py auth")
         kv_set(db, "warned_token", today)
     return token
 
@@ -508,8 +509,8 @@ def publish(config, db, slot, row, token) -> None:
             client.comment(post_urn, comment)
         except Exception as error:
             log.warning("First comment failed: %s", error)
-            notify("LinkedIn Autopilot", "Posted, but add the links comment yourself: " + comment.replace("\n", " "))
-    notify("LinkedIn Autopilot", f"Posted: {(repo or angle)}")
+            notify("ReachPilot", "Posted, but add the links comment yourself: " + comment.replace("\n", " "))
+    notify("ReachPilot", f"Posted: {(repo or angle)}")
 
 
 def tick(config, db) -> None:
@@ -572,7 +573,7 @@ def tick(config, db) -> None:
             if row[6] != "awaiting_approval":
                 db.execute("UPDATE posts SET status='awaiting_approval' WHERE slot=?", (slot,))
                 db.commit()
-                notify("LinkedIn Autopilot", f"Draft ready for {slot}. Approve: python autopilot.py approve")
+                notify("ReachPilot", f"Draft ready for {slot}. Approve: python autopilot.py approve")
             return
 
     if token is None:
@@ -583,7 +584,7 @@ def tick(config, db) -> None:
         db.execute("UPDATE posts SET status='failed', attempts=attempts+1, error=? WHERE slot=?", (str(error)[:500], slot))
         db.commit()
         log.error("Posting failed for %s: %s", slot, error)
-        notify("LinkedIn Autopilot", f"Posting failed, will retry: {str(error)[:120]}")
+        notify("ReachPilot", f"Posting failed, will retry: {str(error)[:120]}")
 
 
 def write_draft(slot: str, body: str, comment: str, images: list[str]) -> Path:
@@ -719,16 +720,16 @@ $repeat = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) -Repetitio
 $logon = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
 $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
     -ExecutionTimeLimit (New-TimeSpan -Minutes 20) -MultipleInstances IgnoreNew -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 5)
-Register-ScheduledTask -TaskName '{TASK_NAME}' -Action $action -Trigger @($repeat, $logon) -Settings $settings `
+Register-ScheduledTask -TaskPath '{TASK_PATH}' -TaskName '{TASK_NAME}' -Action $action -Trigger @($repeat, $logon) -Settings $settings `
     -Description 'Posts juw12 GitHub projects to LinkedIn on schedule' -Force | Out-Null
-Get-ScheduledTask -TaskName '{TASK_NAME}' | Select-Object TaskName, State
+Get-ScheduledTask -TaskPath '{TASK_PATH}' -TaskName '{TASK_NAME}' | Select-Object TaskName, State
 """
     subprocess.run(["powershell", "-NoProfile", "-Command", powershell], check=True)
 
 
 def cmd_uninstall() -> None:
     subprocess.run(
-        ["powershell", "-NoProfile", "-Command", f"Unregister-ScheduledTask -TaskName '{TASK_NAME}' -Confirm:$false"],
+        ["powershell", "-NoProfile", "-Command", f"Unregister-ScheduledTask -TaskPath '{TASK_PATH}' -TaskName '{TASK_NAME}' -Confirm:$false"],
         check=False,
     )
 
@@ -778,7 +779,7 @@ def main() -> None:
     except Exception:
         log.exception("Run failed")
         if args.command == "tick":
-            notify("LinkedIn Autopilot", "A run failed; see autopilot.log")
+            notify("ReachPilot", "A run failed; see autopilot.log")
         else:
             raise
     finally:

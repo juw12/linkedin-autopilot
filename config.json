@@ -37,7 +37,8 @@
     "projects",
     "game",
     "achievements-playground",
-    "linkedin-autopilot"
+    "linkedin-autopilot",
+    "reachpilot"
   ],
   "default_hashtags": [
     "#OpenSource",

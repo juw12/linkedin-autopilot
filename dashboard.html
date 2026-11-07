@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LinkedIn Autopilot</title>
+<title>ReachPilot</title>
 <meta name="theme-color" content="#0a66c2">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
@@ -91,32 +91,74 @@
   .log .w { color: var(--amber); }
   .log .e { color: var(--red); }
   a { color: var(--blue); }
+
+  .btn { border: 0; border-radius: 6px; padding: 7px 14px; font: inherit; font-weight: 600; cursor: pointer; background: var(--blue); color: #fff; }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.ghost { background: var(--blue-soft); color: var(--blue); }
+  .btn:focus-visible, .help-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .btn:disabled { opacity: .55; cursor: default; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .help-btn { border: 1px solid var(--line); background: var(--card); width: 32px; height: 32px; border-radius: 50%; font: 700 15px "Segoe UI", sans-serif; color: var(--blue); cursor: pointer; flex: none; }
+  .tab-count { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; border-radius: 9px; background: var(--red); color: #fff; font-size: 11px; line-height: 18px; text-align: center; font-weight: 700; }
+  .todo { background: var(--card); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,.08); border-left: 5px solid var(--amber); }
+  .todo.p1 { border-left-color: var(--red); }
+  .todo.p3 { border-left-color: #a9b3ba; }
+  .todo h4 { margin: 2px 0 2px; font-size: 15px; }
+  .todo ul { margin: 8px 0 0; padding-left: 18px; }
+  .todo li { margin: 2px 0; }
+  .module { border-top: 4px solid var(--blue); }
+  .module.jobs { border-top-color: var(--green); }
+  .module.email { border-top-color: #7c3aed; }
+  .module.promote { border-top-color: #a9b3ba; }
+  .module .big { font-size: 24px; font-weight: 700; }
+  .module h3 { display: flex; justify-content: space-between; align-items: center; }
+  .toast { position: fixed; right: 18px; bottom: 18px; z-index: 5; background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.25); max-width: 380px; }
+  .toast[hidden] { display: none; }
+  dialog.help { border: 0; border-radius: 12px; padding: 0; max-width: 720px; width: calc(100% - 32px); box-shadow: 0 10px 40px rgba(0,0,0,.3); }
+  dialog.help::backdrop { background: rgba(0,0,0,.35); }
+  dialog.help .inner { padding: 20px 22px; max-height: 80vh; overflow: auto; }
+  dialog.help .mod { border-top: 1px solid var(--line); padding: 12px 0; }
+  dialog.help dt { font-weight: 600; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .03em; margin-top: 6px; }
+  dialog.help dd { margin: 0; }
 </style>
 </head>
 <body>
 <header class="top">
   <div class="bar">
-    <h1 class="brand"><img class="logo" src="/icon.svg" alt="" width="28" height="28">LinkedIn Autopilot</h1>
+    <h1 class="brand"><img class="logo" src="/icon.svg" alt="" width="28" height="28">ReachPilot</h1>
     <nav role="tablist">
       <button role="tab" data-tab="overview" aria-selected="true">Overview</button>
+      <button role="tab" data-tab="todo">To do<span class="tab-count" id="todo-count" hidden></span></button>
+      <button role="tab" data-tab="linkedin">LinkedIn</button>
       <button role="tab" data-tab="schedule">Schedule</button>
-      <button role="tab" data-tab="reach">Posts &amp; reach</button>
-      <button role="tab" data-tab="github">GitHub &amp; clicks</button>
+      <button role="tab" data-tab="reach">Reach</button>
+      <button role="tab" data-tab="github">GitHub</button>
       <button role="tab" data-tab="learning">Learning</button>
+      <button role="tab" data-tab="jobs">Jobs</button>
+      <button role="tab" data-tab="email">Email</button>
+      <button role="tab" data-tab="promote">Promote</button>
       <button role="tab" data-tab="log">Log</button>
     </nav>
     <span class="updated" id="updated">Loading…</span>
+    <button class="help-btn" id="help-open" aria-label="Help: what ReachPilot does and what it needs from you" title="Help">?</button>
   </div>
 </header>
 
 <main>
   <section id="overview"></section>
+  <section id="todo" hidden></section>
+  <section id="linkedin" hidden></section>
   <section id="schedule" hidden></section>
   <section id="reach" hidden></section>
   <section id="github" hidden></section>
   <section id="learning" hidden></section>
+  <section id="jobs" hidden></section>
+  <section id="email" hidden></section>
+  <section id="promote" hidden></section>
   <section id="log" hidden></section>
 </main>
+<div class="toast" id="toast" role="status" hidden></div>
+<dialog class="help" id="help"><div class="inner" id="help-body"></div></dialog>
 
 <script>
 const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -182,13 +224,13 @@ function postCard(entry, index) {
   </article>`;
 }
 
-function renderOverview(d) {
+function renderLinkedin(d) {
   const o = d.overview;
   const next = o.next_post;
   const tokenNote = o.token_days_left === null ? "Not connected: python autopilot.py auth" : o.token_days_left < 7 ? "Renew soon: python autopilot.py auth" : "Connected";
   const tokenBadge = o.token_days_left === null ? "bad" : o.token_days_left < 7 ? "warn" : "good";
   const state = o.paused ? `<span class="badge warn">Paused</span>` : `<span class="badge good">Running</span>`;
-  document.getElementById("overview").innerHTML = `
+  document.getElementById("linkedin").innerHTML = `
     <div class="grid">
       <div class="card next wide">
         ${next ? `<div class="when">Next post · ${esc(niceDate(next.slot))} WIB</div>
@@ -313,15 +355,238 @@ function renderLog(d) {
     const rest = stamp ? line.slice(stamp[0].length) : line;
     return `<span class="${cls}">${stamp ? `<span class="t">${esc(stamp[0].slice(5, 16))}</span>` : ""}${esc(rest)}</span>`;
   }).join("\n");
-  document.getElementById("log").innerHTML = `<div class="card"><h3>Recent activity <span class="hint">(newest first)</span></h3><pre class="log">${lines || "No log yet."}</pre></div>`;
+  const emailLines = ((d.hub && d.hub.email && d.hub.email.log_tail) || []).map(esc).join("\n");
+  document.getElementById("log").innerHTML = `<div class="two">
+    <div class="card"><h3>LinkedIn <span class="hint">(newest first)</span></h3><pre class="log">${lines || "No log yet."}</pre></div>
+    <div class="card"><h3>E-mail applications <span class="hint">(newest first)</span></h3><pre class="log">${emailLines || "No log yet."}</pre></div></div>`;
 }
+
+const TOKEN = "__RP_TOKEN__";
+let latest = null;
+
+function toast(message) {
+  const box = document.getElementById("toast");
+  box.textContent = message;
+  box.hidden = false;
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => (box.hidden = true), 4500);
+}
+
+async function act(name, button) {
+  if (button) button.disabled = true;
+  try {
+    const response = await fetch("/api/action", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-ReachPilot-Token": TOKEN },
+      body: JSON.stringify({ name }),
+    });
+    const reply = await response.json().catch(() => ({ message: "Done." }));
+    toast(reply.message || (response.ok ? "Done." : "That didn't work."));
+    setTimeout(load, 1500);
+  } catch (error) {
+    toast("Couldn't reach ReachPilot: " + error.message);
+  } finally {
+    if (button) setTimeout(() => (button.disabled = false), 1500);
+  }
+}
+
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-action]");
+  if (button) act(button.dataset.action, button);
+  const jump = event.target.closest("[data-goto]");
+  if (jump) showTab(jump.dataset.goto);
+});
+
+function actionButton(name, label, ghost = false) {
+  return name ? `<button class="btn ${ghost ? "ghost" : ""}" data-action="${esc(name)}">${esc(label)}</button>` : "";
+}
+
+function link(url, label) {
+  return url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(label)}</a>` : esc(label);
+}
+
+function todoCard(item) {
+  const links = item.links.length
+    ? `<ul>${item.links.map((l) => `<li>${link(l.url, l.label)}${l.note ? ` <span class="hint">· ${esc(l.note)}</span>` : ""}</li>`).join("")}</ul>` : "";
+  return `<div class="todo p${item.priority}">
+    <span class="badge ${item.priority === 1 ? "bad" : item.priority === 2 ? "warn" : "grey"}">${esc(item.module)}</span>
+    <h4>${esc(item.title)}</h4>
+    <div class="hint">${esc(item.detail)}</div>
+    ${links}
+    ${item.action ? `<div class="actions">${actionButton(item.action, item.action_label)}</div>` : ""}
+  </div>`;
+}
+
+function renderOverview(d) {
+  const o = d.overview, h = d.hub, jobs = h.jobs, email = h.email;
+  const next = o.next_post;
+  const urgent = h.todo.filter((t) => t.priority === 1);
+  document.getElementById("overview").innerHTML = `
+    ${h.todo.length ? `<div class="card" style="margin-bottom:18px">
+      <h3>What I need from you <span class="hint">· ${h.todo.length} item${h.todo.length === 1 ? "" : "s"}${urgent.length ? `, ${urgent.length} urgent` : ""}</span></h3>
+      ${h.todo.slice(0, 3).map(todoCard).join("")}
+      ${h.todo.length > 3 ? `<button class="btn ghost" data-goto="todo">See all ${h.todo.length}</button>` : ""}
+    </div>` : `<div class="card" style="margin-bottom:18px"><h3>Nothing needs you right now</h3><p class="hint">Everything is running on its own.</p></div>`}
+    <div class="two">
+      <div class="card module">
+        <h3>LinkedIn posts <button class="btn ghost" data-goto="linkedin">Open</button></h3>
+        ${next ? `<div class="hint">Next post · ${esc(niceDate(next.slot))} WIB</div><div class="big">${esc(next.title)}</div>` : `<div class="hint">Nothing scheduled.</div>`}
+        <div class="hint">${o.posts_this_week} / ${o.max_per_week} this week · ${num(o.posted_total)} posted · login ${o.token_days_left === null ? "not connected" : o.token_days_left + " days left"}</div>
+      </div>
+      <div class="card module jobs">
+        <h3>Job search <button class="btn ghost" data-goto="jobs">Open</button></h3>
+        ${jobs.installed ? `<div class="big">${num(jobs.today.length)} ready to apply</div>
+          <div class="hint">${num(jobs.applied_total)} applied (${num(jobs.applied_week)} this week) · ${num(jobs.open)} open matches tracked</div>
+          ${jobs.last_error ? `<div class="badge bad" style="margin-top:6px">Last search failed</div>` : ""}
+          <div class="actions">${actionButton("jobs_apply", "Start apply session")}</div>` : `<div class="hint">Not set up.</div>`}
+      </div>
+      <div class="card module email">
+        <h3>E-mail applications <button class="btn ghost" data-goto="email">Open</button></h3>
+        ${email.installed ? `<div class="big">${num(email.sent_today)} sent today</div>
+          <div class="hint">${num(email.sent_week)} this week · ${num(email.sent_total)} total · ${num(email.leads_total)} site-only leads</div>
+          ${lineChart(email.series, "No e-mails yet.")}` : `<div class="hint">Not set up.</div>`}
+      </div>
+      <div class="card module promote">
+        <h3>Project promotion <span class="badge grey">Coming soon</span></h3>
+        <div class="hint">Promotion and UGC outreach e-mails for your projects will appear here, next to LinkedIn reach.</div>
+        <div class="actions"><button class="btn ghost" data-goto="promote">What's planned</button></div>
+      </div>
+    </div>`;
+}
+
+function renderTodo(d) {
+  const items = d.hub.todo;
+  const counter = document.getElementById("todo-count");
+  counter.hidden = !items.length;
+  counter.textContent = items.length;
+  document.getElementById("todo").innerHTML = `
+    <h2>What I need from you</h2>
+    <p class="hint">Only things a robot can't or shouldn't do for you. Red first. Everything else runs by itself.</p>
+    ${items.length ? items.map(todoCard).join("") : `<div class="empty">Nothing right now.</div>`}`;
+}
+
+function renderJobs(d) {
+  const j = d.hub.jobs;
+  const section = document.getElementById("jobs");
+  if (!j.installed) {
+    section.innerHTML = `<div class="empty">Job search isn't set up${j.error ? `: ${esc(j.error)}` : ""}.</div>`;
+    return;
+  }
+  const row = (job) => `<tr>
+      <td class="num">${num(job.score)}</td>
+      <td><b>${esc(job.company)}</b><div class="hint">${esc(job.title)}</div>${job.my_notes ? `<div class="badge warn">${esc(job.my_notes.slice(0, 90))}</div>` : ""}</td>
+      <td>${esc(job.location || "")}</td>
+      <td><span class="badge grey">${esc(job.source)}</span></td>
+      <td>${link(job.link, "Open")}</td></tr>`;
+  const task = d.hub.tasks.jobs || {};
+  section.innerHTML = `
+    <div class="grid">
+      ${kpi("Ready today", num(j.today.length), `${num(j.queue_total)} in the queue`)}
+      ${kpi("Applied", num(j.applied_total), `${num(j.applied_week)} this week`)}
+      ${kpi("Follow-ups due", num(j.follow_ups.length), "Applied 7+ days ago")}
+      ${kpi("Last search", esc(j.last_run ? niceDate(j.last_run) : "–"), j.last_error ? `<span class="badge bad">Failed</span>` : esc(j.last_summary || ""))}
+      ${kpi("Next search", esc(task.next_run || "–"), "07:30 and 12:30 daily")}
+    </div>
+    <div class="card" style="margin-bottom:18px">
+      <h3>Apply</h3>
+      <p class="hint">The apply session opens each job, fills the form (CV, cover letter, visa, salary, notice period) and waits for you to press Submit. It marks the job Applied when the site confirms.</p>
+      <div class="actions">${actionButton("jobs_apply", "Start apply session")}${actionButton("jobs_search_now", "Search for new jobs now", true)}${actionButton("jobs_open_tracker", "Open tracker (Excel)", true)}${actionButton("open_answers", "Edit my answers", true)}</div>
+    </div>
+    ${j.needs_you.length ? `<div class="card" style="margin-bottom:18px"><h3>Stopped and waiting for you</h3><div class="scroll"><table>
+      <thead><tr><th class="num">Score</th><th>Job</th><th>Location</th><th>Site</th><th></th></tr></thead><tbody>${j.needs_you.map(row).join("")}</tbody></table></div></div>` : ""}
+    <div class="card" style="margin-bottom:18px"><h3>Today's list</h3>
+      ${j.today.length ? `<div class="scroll"><table><thead><tr><th class="num">Score</th><th>Job</th><th>Location</th><th>Site</th><th></th></tr></thead>
+      <tbody>${j.today.map(row).join("")}</tbody></table></div>` : `<div class="empty">Nothing queued.</div>`}</div>
+    <div class="card"><h3>Applied</h3>
+      ${j.applied.length ? `<div class="scroll"><table><thead><tr><th>Applied</th><th>Job</th><th>Status</th><th></th></tr></thead><tbody>
+      ${j.applied.map((job) => `<tr><td>${esc(job.applied_on)}</td><td><b>${esc(job.company)}</b><div class="hint">${esc(job.title)}</div></td><td><span class="badge good">${esc(job.status)}</span></td><td>${link(job.link, "Open")}</td></tr>`).join("")}
+      </tbody></table></div>` : `<div class="empty">No applications yet. Start an apply session to send the first ones.</div>`}</div>`;
+}
+
+function renderEmail(d) {
+  const e = d.hub.email;
+  const section = document.getElementById("email");
+  if (!e.installed) {
+    section.innerHTML = `<div class="empty">E-mail applications aren't set up${e.error ? `: ${esc(e.error)}` : ""}.</div>`;
+    return;
+  }
+  const task = d.hub.tasks.email || {};
+  section.innerHTML = `
+    <div class="grid">
+      ${kpi("Sent today", num(e.sent_today), `Cap ${num(e.max_per_day)} per day`)}
+      ${kpi("This week", num(e.sent_week))}
+      ${kpi("All time", num(e.sent_total))}
+      ${kpi("Site-only leads", num(e.leads_total), "No recruiter e-mail in the ad")}
+      ${kpi("Sending", e.relay_ok ? "Ready" : "Not confirmed", e.relay_ok ? "Gmail relay OK" : "Run a test send")}
+      ${kpi("Next run", esc(task.next_run || "–"), `Last activity ${esc(e.last_run ? niceDate(e.last_run) : "–")}`)}
+    </div>
+    <div class="two">
+      <div class="card"><h3>Applications sent per day</h3>${lineChart(e.series, "No e-mails yet.")}</div>
+      <div class="card"><h3>Where they went</h3>${e.regions.length ? e.regions.map(([name, count]) => `<div class="rank"><div>${esc(name)}</div><div class="track"><div class="fill" style="width:${(count / e.regions[0][1]) * 100}%"></div></div><div class="num hint">${count}</div></div>`).join("") : `<div class="empty">Nothing yet.</div>`}</div>
+    </div>
+    <div class="card" style="margin-bottom:18px">
+      <h3>Controls</h3>
+      <p class="hint">Sends from ${esc(e.report_to || "your Gmail")} with your CV; replies go to your personal inbox. ${e.followups_enabled ? `One follow-up after ${esc(e.followup_after_days)} days if nobody replied.` : "Follow-ups are off."}</p>
+      <div class="actions">${actionButton("email_run_now", "Run now")}${actionButton("email_preview", "Preview next e-mails (sends nothing)", true)}${actionButton("email_open_leads", "Open site-only leads", true)}</div>
+    </div>
+    <div class="card" style="margin-bottom:18px"><h3>Recently sent</h3><div class="scroll"><table>
+      <thead><tr><th>Sent</th><th>Job</th><th>Region</th><th>Recruiter</th><th></th></tr></thead><tbody>
+      ${e.recent.map((r) => `<tr><td>${esc(niceDate(r.at))}</td><td><b>${esc(r.company)}</b><div class="hint">${esc(r.title)}</div></td><td>${esc(r.region)}</td><td class="hint">@${esc(r.to_domain)}</td><td>${link(r.url, "Ad")}</td></tr>`).join("")}
+      </tbody></table></div></div>
+    <div class="card"><h3>Best site-only leads</h3><p class="hint">Good fits whose ad has no e-mail address, so they need applying on the site.</p>
+      ${e.leads.length ? `<div class="scroll"><table><thead><tr><th class="num">Fit</th><th>Job</th><th>Region</th><th>Salary</th><th></th></tr></thead><tbody>
+      ${e.leads.map((l) => `<tr><td class="num">${num(l.fit)}</td><td><b>${esc(l.company)}</b><div class="hint">${esc(l.title)}</div></td><td>${esc(l.region)}</td><td class="hint">${esc(l.salary || "–")}</td><td>${link(l.url, "Open")}</td></tr>`).join("")}
+      </tbody></table></div>` : `<div class="empty">None.</div>`}</div>`;
+}
+
+function renderPromote(d) {
+  const p = d.hub.promote;
+  document.getElementById("promote").innerHTML = `
+    <div class="card module promote">
+      <h3>Project promotion <span class="badge grey">${p.installed ? "Set up" : "Coming soon"}</span></h3>
+      <p class="hint">This tab is reserved for the promotion / UGC e-mail automation for your projects. When it's built it drops into <code>${esc(p.folder)}</code> and shows up here and in "What I need from you".</p>
+      <h3 style="margin-top:14px">Planned</h3>
+      <ul>${p.planned.map((step) => `<li>${esc(step)}</li>`).join("")}</ul>
+    </div>`;
+}
+
+function renderHelp(d) {
+  document.getElementById("help-body").innerHTML = `
+    <h2>How ReachPilot works</h2>
+    <p class="hint">ReachPilot runs your outreach automations on a schedule and only asks you for the few things that need a human. The "To do" tab always shows what those are right now.</p>
+    ${d.hub.help.map((m) => `<div class="mod"><h3>${esc(m.module)}</h3><dl>
+      <dt>When</dt><dd>${esc(m.runs)}</dd>
+      <dt>Does by itself</dt><dd>${esc(m.auto)}</dd>
+      <dt>Needs you</dt><dd>${esc(m.you)}</dd></dl></div>`).join("")}
+    <div class="mod"><h3>Safety rules</h3><p class="hint">It never solves CAPTCHAs or human checks, never creates accounts or signs in for you, and never posts or e-mails anything made up. Everything stays on this PC; job and e-mail data is never uploaded to GitHub.</p></div>
+    <div class="actions"><button class="btn" id="help-close">Close</button>${actionButton("open_modules", "Open modules folder", true)}</div>`;
+}
+
+function showTab(id) {
+  document.querySelectorAll("nav button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === id)));
+  document.querySelectorAll("main section").forEach((s) => (s.hidden = s.id !== id));
+}
+
+document.getElementById("help-open").addEventListener("click", () => {
+  if (latest) renderHelp(latest);
+  document.getElementById("help").showModal();
+});
+document.getElementById("help").addEventListener("click", (event) => {
+  if (event.target.id === "help-close" || event.target.id === "help") document.getElementById("help").close();
+});
 
 async function load() {
   try {
     const response = await fetch("/api/data", { cache: "no-store" });
     const data = await response.json();
     if (data.error) throw new Error(data.error);
+    latest = data;
     renderOverview(data);
+    renderTodo(data);
+    renderLinkedin(data);
+    renderJobs(data);
+    renderEmail(data);
+    renderPromote(data);
     renderSchedule(data);
     renderReach(data);
     renderGithub(data);
@@ -334,10 +599,7 @@ async function load() {
 }
 
 document.querySelectorAll("nav button").forEach((button) => {
-  button.addEventListener("click", () => {
-    document.querySelectorAll("nav button").forEach((b) => b.setAttribute("aria-selected", String(b === button)));
-    document.querySelectorAll("main section").forEach((s) => (s.hidden = s.id !== button.dataset.tab));
-  });
+  button.addEventListener("click", () => showTab(button.dataset.tab));
 });
 
 load();

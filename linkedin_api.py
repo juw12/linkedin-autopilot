@@ -46,7 +46,7 @@ def run_oauth(client_id: str, client_secret: str) -> dict:
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.end_headers()
-            self.wfile.write("<h2>LinkedIn Autopilot connected. You can close this tab.</h2>".encode())
+            self.wfile.write("<h2>ReachPilot is connected to LinkedIn. You can close this tab.</h2>".encode())
 
         def log_message(self, *args):
             pass

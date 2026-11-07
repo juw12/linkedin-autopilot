@@ -1,13 +1,16 @@
-"""Local dashboard: upcoming schedule, post history, reach and the signals the bot learns from.
+"""ReachPilot dashboard: LinkedIn posting, job search, e-mail applications (and later promotion) in one window.
 
 Run:  python autopilot.py dashboard
-Opens http://127.0.0.1:8770 (or the next free port) in an app window. Read-only: it never posts or changes the schedule.
+Opens http://127.0.0.1:8770 (or the next free port) in an app window. It reads every module's data; the only things it
+changes are the whitelisted actions in hub.run_action (start a run, open the apply session, pause posting), and those
+need the per-session token embedded in the page.
 The server stops by itself 15 minutes after the window is closed.
 """
 from __future__ import annotations
 
 import json
 import mimetypes
+import secrets
 import shutil
 import subprocess
 import sys
@@ -21,16 +24,18 @@ from pathlib import Path
 from urllib.parse import parse_qs, quote, urlparse
 
 import analytics
+import hub
 import autopilot as ap
 import trylinks
 
 PORTS = range(8770, 8790)
-PING_REPLY = b"linkedin-autopilot-dashboard"
+PING_REPLY = b"reachpilot-dashboard"
 IDLE_SHUTDOWN_SECONDS = 15 * 60
 PAGE = Path(__file__).with_name("dashboard.html")
 ICONS = Path(__file__).with_name("icons")
-WINDOW_TITLE = "LinkedIn Autopilot"  # must match <title> in dashboard.html
-APP_USER_MODEL_ID = "juw12.LinkedInAutopilot.Dashboard"
+WINDOW_TITLE = "ReachPilot"  # must match <title> in dashboard.html
+APP_USER_MODEL_ID = "juw12.ReachPilot.Dashboard"
+SESSION_TOKEN = secrets.token_urlsafe(24)
 ICON_FILES = {  # url path -> (file in icons/, content type); one mark for favicon, app window and taskbar
     "/icon.svg": ("icon.svg", "image/svg+xml"),
     "/icon-192.png": ("icon-192.png", "image/png"),
@@ -38,8 +43,8 @@ ICON_FILES = {  # url path -> (file in icons/, content type); one mark for favic
     "/favicon.ico": ("app.ico", "image/x-icon"),
 }
 MANIFEST = json.dumps({
-    "name": "LinkedIn Autopilot",
-    "short_name": "Autopilot",
+    "name": "ReachPilot",
+    "short_name": "ReachPilot",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#f3f2ef",
@@ -247,6 +252,7 @@ def overview(db, config: dict, now: datetime, plan: list[dict]) -> dict:
         "engagements": totals[1],
         "posts_with_linkedin_stats": totals[2],
         "slots": [f'{slot["weekday"]} {slot["time"]}' for slot in config["slots"]],
+        "awaiting": db.execute("SELECT COUNT(*) FROM posts WHERE status='awaiting_approval'").fetchone()[0],
         "inbox": str(ap.INBOX),
     }
 
@@ -264,8 +270,10 @@ def build_data() -> dict:
     db = ap.connect_db()
     try:
         plan = forecast(db, config, now)
+        summary = overview(db, config, now, plan)
         return {
-            "overview": overview(db, config, now, plan),
+            "overview": summary,
+            "hub": hub.build(summary),
             "schedule": plan,
             "history": history(db),
             "github": github_section(db, now),
@@ -283,7 +291,8 @@ class Handler(BaseHTTPRequestHandler):
         self.server.last_request = time.time()
         url = urlparse(self.path)
         if url.path == "/":
-            self.send(200, PAGE.read_bytes(), "text/html; charset=utf-8")
+            page = PAGE.read_text(encoding="utf-8").replace("__RP_TOKEN__", SESSION_TOKEN)
+            self.send(200, page.encode("utf-8"), "text/html; charset=utf-8")
         elif url.path == "/ping":
             self.send(200, PING_REPLY, "text/plain")
         elif url.path == "/api/data":
@@ -300,6 +309,22 @@ class Handler(BaseHTTPRequestHandler):
             self.send(200, MANIFEST, "application/manifest+json")
         else:
             self.send(404, b"Not found", "text/plain")
+
+    def do_POST(self) -> None:
+        """Whitelisted actions only, and only from the page this server served (session token + same origin)."""
+        self.server.last_request = time.time()
+        origin = self.headers.get("Origin", "")
+        same_origin = origin == "" or origin.startswith(f"http://127.0.0.1:{self.server.server_port}")
+        if urlparse(self.path).path != "/api/action" or self.headers.get("X-ReachPilot-Token") != SESSION_TOKEN or not same_origin:
+            self.send(403, b"Forbidden", "text/plain")
+            return
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+            name = json.loads(self.rfile.read(length) or b"{}").get("name", "")
+            message = hub.run_action(name)
+            self.send(200, json.dumps({"ok": True, "message": message}).encode("utf-8"), "application/json")
+        except Exception as error:
+            self.send(400, json.dumps({"ok": False, "message": str(error)}).encode("utf-8"), "application/json")
 
     def send_image(self, raw_path: str) -> None:
         path = Path(raw_path).resolve()

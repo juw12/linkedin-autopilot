@@ -20,3 +20,6 @@ app_logo.png
 __pycache__/
 *.pyc
 dashboard.ico
+
+# Private ReachPilot modules (job search, e-mail applications, digest): personal data, never commit
+modules/
