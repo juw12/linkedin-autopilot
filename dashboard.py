@@ -36,6 +36,10 @@ ICONS = Path(__file__).with_name("icons")
 WINDOW_TITLE = "ReachPilot"  # must match <title> in dashboard.html
 APP_USER_MODEL_ID = "juw12.ReachPilot.Dashboard"
 SESSION_TOKEN = secrets.token_urlsafe(24)
+BOOT_ID = secrets.token_hex(6)  # changes on every (re)start; the page reloads itself when it sees a new one
+CODE_DIR = Path(__file__).parent
+CODE_CHECK_SECONDS = 5
+NO_WINDOW_ENV = "REACHPILOT_NO_WINDOW"  # set when the dashboard restarts itself: reuse the open window
 ICON_FILES = {  # url path -> (file in icons/, content type); one mark for favicon, app window and taskbar
     "/icon.svg": ("icon.svg", "image/svg+xml"),
     "/icon-192.png": ("icon-192.png", "image/png"),
@@ -295,6 +299,9 @@ class Handler(BaseHTTPRequestHandler):
             self.send(200, page.encode("utf-8"), "text/html; charset=utf-8")
         elif url.path == "/ping":
             self.send(200, PING_REPLY, "text/plain")
+        elif url.path == "/version":
+            version = {"boot": BOOT_ID, "page": int(PAGE.stat().st_mtime)}
+            self.send(200, json.dumps(version).encode("utf-8"), "application/json")
         elif url.path == "/api/data":
             try:
                 self.send(200, json.dumps(build_data()).encode("utf-8"), "application/json")
@@ -434,6 +441,52 @@ def open_window(url: str) -> threading.Thread | None:
     return None
 
 
+def code_snapshot() -> dict[str, float]:
+    """Modification times of the dashboard's own Python files (hub.py, dashboard.py, autopilot.py, ...)."""
+    return {path.name: path.stat().st_mtime for path in CODE_DIR.glob("*.py")}
+
+
+def code_is_healthy() -> bool:
+    """True if the edited code imports cleanly in a separate process, so a half-saved file never takes the dashboard down."""
+    try:
+        check = subprocess.run(
+            [str(Path(sys.executable).with_name("python.exe")), "-c", "import hub, dashboard, analytics, trylinks"],
+            cwd=CODE_DIR, capture_output=True, timeout=90, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+        return check.returncode == 0
+    except Exception:
+        return False
+
+
+def watch_code(server: ThreadingHTTPServer) -> None:
+    """Restart the dashboard in place when its code changes: wait until the files stop changing,
+    check that the new code imports, then stop this server so run() can start a fresh process."""
+    running = code_snapshot()
+    while True:
+        time.sleep(CODE_CHECK_SECONDS)
+        current = code_snapshot()
+        if current == running:
+            continue
+        time.sleep(CODE_CHECK_SECONDS)
+        if code_snapshot() != current:
+            continue  # still being edited
+        if not code_is_healthy():
+            running = current  # broken edit: keep serving the old code, try again on the next change
+            continue
+        server.restart_requested = True
+        server.shutdown()
+        return
+
+
+def restart_process() -> None:
+    """Start a fresh dashboard (new code) that reuses the open window; the page notices the new BOOT_ID and reloads."""
+    environment = dict(__import__("os").environ, **{NO_WINDOW_ENV: "1"})
+    subprocess.Popen(
+        [sys.executable, str(CODE_DIR / "autopilot.py"), "dashboard"],
+        cwd=CODE_DIR, env=environment, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+    )
+
+
 def run() -> None:
     """Reuse a dashboard that is already running, otherwise start one on the first free port."""
     server = None
@@ -464,6 +517,12 @@ def run() -> None:
                 server.shutdown()
                 return
 
+    server.restart_requested = False
     threading.Thread(target=stop_when_idle, daemon=True).start()
-    open_window(url)
+    threading.Thread(target=watch_code, args=(server,), daemon=True).start()
+    if not __import__("os").environ.pop(NO_WINDOW_ENV, None):
+        open_window(url)
     server.serve_forever()
+    server.server_close()
+    if server.restart_requested:
+        restart_process()

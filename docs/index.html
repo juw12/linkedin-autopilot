@@ -709,6 +709,9 @@ function renderHelp(d) {
 }
 
 function showTab(id) {
+  try {
+    sessionStorage.setItem("rp-tab", id);
+  } catch (error) {}
   document.querySelectorAll("nav button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === id)));
   document.querySelectorAll("main section").forEach((s) => (s.hidden = s.id !== id));
 }
@@ -750,6 +753,29 @@ document.querySelectorAll("nav button").forEach((button) => {
 
 load();
 setInterval(load, 60000);
+
+// Auto-update: the local server restarts itself when its code changes; reload onto the new code,
+// keeping the open tab. Only for the local app (the public demo has no server behind it, TOKEN is "demo").
+if (location.hostname === "127.0.0.1" && TOKEN !== "demo") {
+  let knownVersion = null;
+  setInterval(async () => {
+    try {
+      const response = await fetch("/version", { cache: "no-store" });
+      if (!response.ok) return;
+      const version = await response.json();
+      const changed = knownVersion && (version.boot !== knownVersion.boot || version.page !== knownVersion.page);
+      knownVersion = knownVersion && !changed ? knownVersion : version;
+      const busy = document.querySelector("button[disabled]") || document.querySelector("dialog[open]");
+      if (changed && !busy) location.reload();
+    } catch (error) {
+      // server is restarting: try again on the next tick
+    }
+  }, 10000);
+}
+try {
+  const savedTab = sessionStorage.getItem("rp-tab");
+  if (savedTab && document.getElementById(savedTab)) showTab(savedTab);
+} catch (error) {}
 </script>
 </body>
 </html>
